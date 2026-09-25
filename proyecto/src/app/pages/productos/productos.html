@@ -1,0 +1,32 @@
+<div class="catalog-shell">
+  <header class="catalog-header"><div><p class="overline">NOVA STUDIO / CATÁLOGO</p><h1>Productos</h1><p>Administra tus prendas, variantes y disponibilidad.</p></div><button class="new-button" (click)="cancelar()">＋ Nueva prenda</button></header>
+  <section class="form-card">
+    <div class="form-title"><div><p class="overline">{{ editando ? 'ACTUALIZACIÓN' : 'INVENTARIO' }}</p><h2>{{ editando ? 'Editar prenda' : 'Añadir nueva prenda' }}</h2></div><span class="draft">● Guardado automático</span></div>
+    <div class="form-grid">
+      <label>Nombre de la prenda<input placeholder="Ej. Blazer oversize" [(ngModel)]="producto.nombre"></label>
+      <label>SKU<input placeholder="Ej. NOV-BLZ-001" [(ngModel)]="producto.sku"></label>
+      <label>Categoría<select [(ngModel)]="producto.categoria"><option>Vestidos</option><option>Prendas superiores</option><option>Pantalones</option><option>Accesorios</option><option>Novedades</option></select></label>
+      <label>Color<input placeholder="Ej. Negro carbón" [(ngModel)]="producto.color"></label>
+      <label>Talla<select [(ngModel)]="producto.talla"><option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>Única</option></select></label>
+      <label>Precio (S/)<input type="number" min="0" [(ngModel)]="producto.precio"></label>
+      <label>Unidades<input type="number" min="0" [(ngModel)]="producto.stock"></label>
+      <label class="wide">URL de imagen<input placeholder="https://..." [(ngModel)]="producto.imagen"></label>
+    </div>
+    <div class="form-actions"><button class="save-button" (click)="guardar()" [disabled]="!producto.nombre || !producto.sku">{{ editando ? 'Guardar cambios' : 'Añadir al catálogo' }} <span>→</span></button><button class="cancel-button" *ngIf="editando" (click)="cancelar()">Cancelar</button></div>
+  </section>
+  <section class="catalog-card">  <div class="catalog-toolbar"><div><h2>Catálogo de prendas <span>{{ productosFiltrados.length }}</span></h2><p>Visualiza y gestiona todos los artículos.</p></div><div class="toolbar-actions"><div class="search">⌕ <input [(ngModel)]="terminoBusqueda" placeholder="Buscar producto..." aria-label="Buscar producto" /></div><select [(ngModel)]="categoriaFiltro" aria-label="Filtrar por categoría"><option *ngFor="let categoria of categorias">{{ categoria }}</option></select></div></div>
+    <div class="product-gallery" *ngIf="productosFiltrados.length">
+      <article class="fashion-card" *ngFor="let p of productosFiltrados">
+        <div class="fashion-image" [style.background-image]="'url(' + imagenProducto(p) + ')'">
+          <span class="new-tag" *ngIf="p.id > 7">NUEVO</span>
+          <button class="heart" type="button" aria-label="Favorito">♡</button>
+          <div class="quick-actions"><button type="button" (click)="editar(p)">Editar prenda</button><button type="button" (click)="eliminar(p.id)">Eliminar</button></div>
+        </div>
+        <div class="fashion-info"><div><p>{{ p.categoria }}</p><h3>{{ p.nombre }}</h3><small>{{ p.talla }} · {{ p.color }}</small></div><strong>S/ {{ p.precio | number:'1.2-2' }}</strong></div>
+        <div class="fashion-footer"><span [class.warning]="p.stock < 10"><i></i>{{ p.stock }} disponibles</span><span>{{ p.sku }}</span></div>
+      </article>
+    </div>
+    <p class="empty" *ngIf="!productosFiltrados.length">No hay prendas para mostrar.</p>
+    <div class="table-wrap"><table><thead><tr><th>PRENDA</th><th>CATEGORÍA</th><th>VARIANTE</th><th>PRECIO</th><th>STOCK</th><th>ESTADO</th><th></th></tr></thead><tbody><tr *ngFor="let p of productosFiltrados"><td><div class="item-cell"><div class="item-image" [style.background-image]="'url(' + imagenProducto(p) + ')'"></div><div><strong>{{ p.nombre }}</strong><small>{{ p.sku }}</small></div></div></td><td>{{ p.categoria }}</td><td>{{ p.talla }} / {{ p.color }}</td><td class="price">S/ {{ p.precio | number:'1.2-2' }}</td><td><span [class.low-stock]="p.stock < 10">{{ p.stock }} uds.</span></td><td><span class="status" [class.inactive]="!p.activo">{{ p.activo ? 'Activo' : 'Inactivo' }}</span></td><td><div class="actions"><button (click)="editar(p)" aria-label="Editar">✎</button><button (click)="eliminar(p.id)" aria-label="Eliminar">×</button></div></td></tr></tbody></table></div>
+  </section>
+</div>

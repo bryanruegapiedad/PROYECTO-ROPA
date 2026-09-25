@@ -1,0 +1,205 @@
+<main class="storefront">
+  <header class="store-header">
+    <a class="brand" routerLink="/tienda"><span class="brand-mark">N</span><span>NOVA <small>STUDIO</small></span></a>
+    <nav>
+      <a class="active" routerLink="/tienda">Colección</a>
+      <a routerLink="/tienda/categoria/mujeres">Categorías</a>
+      <a href="#novedades">Novedades</a>
+    </nav>
+    <div class="header-actions">
+      <button class="cart-button" type="button" (click)="alternarCarrito()">Carrito <span>{{ carrito.cantidadTotal }}</span></button>
+      <button class="outline-button" type="button" (click)="cerrarSesion()">Salir</button>
+      <span class="user-mark">U</span>
+    </div>
+  </header>
+
+  <section class="hero-store">
+    <div class="hero-copy">
+      <p class="eyebrow">NUEVA TEMPORADA · 2026</p>
+      <h1>Viste tu<br><em>propia historia.</em></h1>
+      <p>Prendas elegantes para cada momento, con un look que habla por ti.</p>
+      <div class="hero-cta-row">
+        <a class="hero-link" href="#categorias">Explorar colección <span>↗</span></a>
+        <span class="hero-pill">Envío gratis desde S/299</span>
+      </div>
+    </div>
+
+    <div class="hero-image">
+      <div class="floating-card">
+        <p>Best seller</p>
+        <strong>Blazer Oversize</strong>
+        <span>S/189</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="category-strip" id="categorias">
+    <div class="section-intro">
+      <p class="eyebrow">ENCUENTRA TU ESTILO</p>
+      <h2>Compra por categoría</h2>
+    </div>
+    <div class="category-buttons">
+      <button *ngFor="let categoria of categorias" type="button" (click)="irCategoria(categoria)">
+        <span>{{ categoria === 'niños' ? '◒' : categoria === 'niñas' ? '✦' : categoria === 'mujeres' ? '◇' : '◈' }}</span>
+        {{ categoria }}
+      </button>
+    </div>
+  </section>
+
+  <section class="featured" id="novedades">
+    <div class="section-top">
+      <div>
+        <p class="eyebrow">SELECCIÓN NOVA</p>
+        <h2>Lo más elegido esta semana</h2>
+      </div>
+      <a routerLink="/tienda/categoria/mujeres">Ver todo <span>↗</span></a>
+    </div>
+
+    <p class="loading" *ngIf="cargando">Cargando colección...</p>
+
+    <div class="product-grid" *ngIf="!cargando">
+      <article class="product-card" *ngFor="let producto of productos.slice(0, 8)">
+        <div class="product-image">
+          <img [src]="imagen(producto)" [alt]="producto.nombre" />
+          <span class="tag" *ngIf="producto.stock < 10">Últimas unidades</span>
+          <button type="button" class="heart" aria-label="Guardar producto">♡</button>
+        </div>
+        <div class="product-meta">
+          <div>
+            <p>{{ producto.categoria }}</p>
+            <h3>{{ producto.nombre }}</h3>
+            <small>{{ producto.color }} · Talla {{ producto.talla }}</small>
+          </div>
+          <strong>{{ producto.precio | currency:'PEN':'symbol':'1.2-2' }}</strong>
+        </div>
+        <div class="product-actions">
+          <a class="view-more" [routerLink]="['/producto', producto.id]">Ver producto</a>
+          <a class="add-cart" [routerLink]="['/producto', producto.id]">Elegir variante</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <div class="detail-backdrop" *ngIf="productoSeleccionado" (click)="cerrarDetalle()">
+    <div class="detail-modal" (click)="$event.stopPropagation()">
+      <button class="detail-close" type="button" (click)="cerrarDetalle()" aria-label="Cerrar detalle">×</button>
+      <div class="detail-image">
+        <img [src]="imagen(productoSeleccionado)" [alt]="productoSeleccionado.nombre" />
+      </div>
+      <div class="detail-content">
+        <p class="eyebrow">DETALLE DE PRENDA</p>
+        <h3>{{ productoSeleccionado.nombre }}</h3>
+        <div class="detail-price-row">
+          <strong>{{ productoSeleccionado.precio | currency:'PEN':'symbol':'1.2-2' }}</strong>
+          <span>{{ productoSeleccionado.stock }} disponibles</span>
+        </div>
+        <p class="detail-description">Diseñada para una silueta refinada, con materiales suaves y acabados de alta gama para cada ocasión especial o diaria.</p>
+        <ul class="detail-specs">
+          <li><span>Categoría</span><strong>{{ productoSeleccionado.categoria }}</strong></li>
+          <li><span>Color</span><strong>{{ productoSeleccionado.color }}</strong></li>
+          <li><span>Talla</span><strong>{{ productoSeleccionado.talla }}</strong></li>
+          <li><span>Género</span><strong>{{ productoSeleccionado.genero }}</strong></li>
+        </ul>
+        <div class="detail-actions">
+          <button class="secondary-action" type="button" (click)="cerrarDetalle()">Seguir navegando</button>
+          <button class="add-cart" type="button" (click)="agregarAlCarrito(productoSeleccionado)">Añadir al carrito</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="lookbook">
+    <div class="lookbook-copy">
+      <p class="eyebrow">LOOKBOOK</p>
+      <h2>Prendas que transforman tu outfit.</h2>
+      <p>Combinaciones que se sienten frescas, cuidadas y cómodas para cada plan del día.</p>
+      <button type="button">Explorar looks</button>
+    </div>
+    <div class="lookbook-grid">
+      <div class="lookbook-card tall">
+        <img src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80" alt="Prenda elegante" />
+      </div>
+      <div class="lookbook-card">
+        <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80" alt="Vestido de moda" />
+      </div>
+      <div class="lookbook-card">
+        <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80" alt="Conjunto casual" />
+      </div>
+    </div>
+  </section>
+
+  <aside class="cart-drawer" *ngIf="carritoAbierto">
+    <div class="cart-heading">
+      <div>
+        <p class="eyebrow">TU SELECCIÓN</p>
+        <h2>Carrito de compra</h2>
+      </div>
+      <button type="button" class="close-cart" (click)="alternarCarrito()" aria-label="Cerrar carrito">×</button>
+    </div>
+    <p class="empty" *ngIf="!carrito.items.length">Tu carrito está vacío.</p>
+    <div class="cart-line" *ngFor="let item of carrito.items">
+      <img [src]="imagen(item.producto)" [alt]="item.producto.nombre" />
+      <div>
+        <strong>{{ item.producto.nombre }}</strong>
+          <small>{{ item.variante.color }} / {{ item.variante.talla }} · {{ item.variante.precio | currency:'PEN':'symbol':'1.2-2' }}</small>
+        <div class="stepper">
+          <button type="button" (click)="carrito.reducir(item.variante.id)">−</button>
+          <span>{{ item.cantidad }}</span>
+          <button type="button" (click)="carrito.agregar(item.producto, item.variante)">+</button>
+        </div>
+      </div>
+      <button type="button" class="remove" (click)="carrito.quitar(item.variante.id)" aria-label="Quitar">×</button>
+    </div>
+    <div class="cart-total" *ngIf="carrito.items.length">
+      <span>Total</span>
+      <strong>{{ carrito.total | currency:'PEN':'symbol':'1.2-2' }}</strong>
+    </div>
+
+    <div class="checkout-form" *ngIf="carrito.items.length">
+      <div class="checkout-summary">
+        <span>Subtotal</span>
+        <strong>{{ carrito.total | currency:'PEN':'symbol':'1.2-2' }}</strong>
+      </div>
+      <label>
+        Cliente
+        <input type="text" [(ngModel)]="nombreCliente" placeholder="Tu nombre" />
+      </label>
+      <label>
+        Dirección de entrega
+        <input type="text" [(ngModel)]="direccionEnvio" placeholder="Av. principal 123" />
+      </label>
+      <label>
+        Método de pago
+        <select [(ngModel)]="metodoPago">
+          <option value="Efectivo">Efectivo</option>
+          <option value="Tarjeta">Tarjeta</option>
+          <option value="Yape/Plin">Yape/Plin</option>
+        </select>
+      </label>
+      <p class="pedido-error" *ngIf="errorPedido">{{ errorPedido }}</p>
+      <p class="pedido-ok" *ngIf="mensajePedido">{{ mensajePedido }}</p>
+      <button class="checkout" type="button" [disabled]="!carrito.items.length || procesandoPedido" (click)="confirmarCompra()">
+        {{ procesandoPedido ? 'Procesando...' : 'Confirmar pedido' }} <span>↗</span>
+      </button>
+    </div>
+  </aside>
+
+  <section class="values">
+    <article>
+      <p class="eyebrow">MISIÓN</p>
+      <h2>Diseñar momentos<br>que se sienten tuyos.</h2>
+      <p>Acercamos moda honesta, versátil y especial para que cada persona pueda expresarse a su manera.</p>
+    </article>
+    <article>
+      <p class="eyebrow">VISIÓN</p>
+      <h2>Una tienda que<br>inspira todos los días.</h2>
+      <p>Ser el espacio digital favorito para descubrir prendas con identidad, cercanía y una experiencia sencilla.</p>
+    </article>
+  </section>
+
+  <footer class="store-footer">
+    <div class="brand"><span class="brand-mark">N</span><span>NOVA <small>STUDIO</small></span></div>
+    <p>Moda para tu propia historia.</p>
+    <small>© 2026 NOVA Studio · Todos los derechos reservados</small>
+  </footer>
+</main>

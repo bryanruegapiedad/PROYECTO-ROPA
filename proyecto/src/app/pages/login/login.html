@@ -1,0 +1,49 @@
+<main class="login-shell">
+  <div class="ambient ambient-one" aria-hidden="true"></div>
+  <div class="ambient ambient-two" aria-hidden="true"></div>
+  <section class="login-frame">
+    <aside class="visual-panel">
+      <div class="visual-top"><span class="logo-mark">N</span><span class="logo-name">NOVA / 01</span></div>
+      <div class="visual-copy"><p class="eyebrow">NUEVA COLECCIÓN · 2026</p><h1>Tu estilo.<br><em>Sin límites.</em></h1><p>Moda que se adapta a tu ritmo, diseñada para destacar.</p></div>
+      <div class="visual-bottom"><span>EXPLORA LO EXTRAORDINARIO</span><span class="line"></span><span>SCROLL ↓</span></div>
+    </aside>
+    <section class="login-card" aria-labelledby="login-title">
+      <div class="mobile-brand"><span class="logo-mark">N</span><span class="logo-name">NOVA / 01</span></div>
+      <div class="auth-tabs" role="tablist"><button type="button" [class.active]="!modoRegistro" (click)="mostrarLogin()">Iniciar sesión</button><button type="button" [class.active]="modoRegistro" (click)="mostrarRegistro()">Registro</button></div>
+      <div class="heading"><p class="eyebrow">ÁREA PRIVADA</p><h2 id="login-title">{{ modoRegistro ? 'Crea tu cuenta.' : 'Bienvenido' }}<br><em>{{ modoRegistro ? 'en NOVA.' : 'de vuelta.' }}</em></h2><p>{{ modoRegistro ? 'Regístrate para gestionar tu tienda.' : 'Ingresa para continuar tu experiencia.' }}</p></div>
+      <form (ngSubmit)="modoRegistro ? registrar() : ingresar()" #loginForm="ngForm">
+        @if (error) { <p class="form-error" role="alert">{{ error }}</p> }
+        @if (modoRegistro) {
+          <label for="nombre">NOMBRE COMPLETO</label>
+          <div class="input-wrap"><span class="input-icon" aria-hidden="true">◌</span><input id="nombre" name="nombre" type="text" placeholder="Tu nombre" [(ngModel)]="nombre" required autocomplete="name"></div>
+          <label for="correo">CORREO ELECTRÓNICO</label>
+          <div class="input-wrap"><span class="input-icon" aria-hidden="true">@</span><input id="correo" name="correo" type="email" placeholder="tu@correo.com" [(ngModel)]="correo" required email autocomplete="email"></div>
+        }
+        <label for="usuario">USUARIO</label>
+        <div class="input-wrap"><span class="input-icon" aria-hidden="true">◌</span><input id="usuario" name="usuario" type="text" placeholder="Tu nombre de usuario" [(ngModel)]="usuario" required autocomplete="username"></div>
+        <div class="password-heading"><label for="clave">CONTRASEÑA</label><button *ngIf="!modoRegistro" class="link-button" type="button" (click)="abrirRecuperacion()">¿La olvidaste?</button></div>
+        <div class="input-wrap"><span class="input-icon" aria-hidden="true">⌁</span><input id="clave" name="clave" [type]="mostrarClave ? 'text' : 'password'" placeholder="••••••••" [(ngModel)]="clave" required autocomplete="current-password"><button class="visibility" type="button" (click)="mostrarClave = !mostrarClave" [attr.aria-label]="mostrarClave ? 'Ocultar contraseña' : 'Mostrar contraseña'">{{ mostrarClave ? 'Ocultar' : 'Ver' }}</button></div>
+        @if (modoRegistro) {
+          <label for="confirmarClave">CONFIRMAR CONTRASEÑA</label>
+          <div class="input-wrap"><span class="input-icon" aria-hidden="true">⌁</span><input id="confirmarClave" name="confirmarClave" type="password" placeholder="Repite tu contraseña" [(ngModel)]="confirmarClave" required autocomplete="new-password"></div>
+        }
+        <button class="primary-button" [class.register-button]="modoRegistro" type="submit" [disabled]="loginForm.invalid || cargando"><span>{{ cargando ? (modoRegistro ? 'Registrando...' : 'Iniciando sesión...') : (modoRegistro ? 'Crear cuenta' : 'Iniciar sesión') }}</span><span aria-hidden="true">↗</span></button>
+      </form>
+      @if (!modoRegistro) { <p class="demo"><span>DEMO</span> admin / 1234</p> }
+      <p class="legal">Al continuar aceptas nuestros <a href="#">términos de uso</a> y <a href="#">política de privacidad</a>.</p>
+    </section>
+  </section>
+  @if (mostrarRecuperacion) {
+    <div class="modal-backdrop" (click)="cerrarRecuperacion()">
+      <section class="recovery-card" role="dialog" aria-modal="true" aria-labelledby="recovery-title" (click)="$event.stopPropagation()">
+        <button class="close-button" type="button" (click)="cerrarRecuperacion()" aria-label="Cerrar recuperación">×</button><span class="recovery-icon">✦</span><p class="eyebrow">RECUPERACIÓN</p><h2 id="recovery-title">Recupera tu acceso</h2>
+        @if (!recuperacionEnviada) {
+          <p>Escribe tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
+          <form (ngSubmit)="enviarRecuperacion()" #recoveryForm="ngForm"><label for="correo">CORREO ELECTRÓNICO</label><input id="correo" name="correo" type="email" placeholder="nombre@empresa.com" [(ngModel)]="correoRecuperacion" required email autocomplete="email"><button class="primary-button" type="submit" [disabled]="recoveryForm.invalid">Enviar enlace <span>↗</span></button></form>
+        } @else {
+          <p class="success-message">Si existe una cuenta asociada a <strong>{{ correoRecuperacion }}</strong>, recibirás las instrucciones.</p><button class="primary-button" type="button" (click)="cerrarRecuperacion()">Volver al inicio</button>
+        }
+      </section>
+    </div>
+  }
+</main>

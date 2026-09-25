@@ -1,0 +1,129 @@
+<main class="category-page">
+  <header class="store-header">
+    <a class="brand" routerLink="/tienda"><span class="brand-mark">N</span><span>NOVA <small>STUDIO</small></span></a>
+    <nav>
+      <a routerLink="/tienda">Colección</a>
+      <a class="active" routerLink="/tienda/categoria/mujeres">Categorías</a>
+    </nav>
+    <div class="header-actions">
+      <button class="cart-button" type="button" (click)="alternarCarrito()">Carrito <span>{{ carrito.cantidadTotal }}</span></button>
+      <button class="outline-button" type="button" (click)="cerrarSesion()">Salir</button>
+      <span class="user-mark">U</span>
+    </div>
+  </header>
+
+  <section class="category-hero">
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">COLECCIÓN EDITORIAL</p>
+        <h1>{{ titulo }}</h1>
+        <p>Descubre prendas pensadas para vivir cada momento con estilo, comodidad y personalidad.</p>
+        <div class="tag-row">
+          <span>Prendas premium</span>
+          <span>Entrega rápida</span>
+          <span>Últimas piezas</span>
+        </div>
+      </div>
+
+      <div class="hero-preview" *ngIf="productos.length">
+        <div class="editorial-card main">
+          <img [src]="imagen(productos[0])" [alt]="productos[0].nombre" />
+        </div>
+        <div class="editorial-card small">
+          <img [src]="imagen(productos[1] || productos[0])" [alt]="(productos[1] || productos[0]).nombre" />
+        </div>
+      </div>
+    </div>
+
+    <div class="category-nav">
+      <button *ngFor="let item of categorias" type="button" [class.active]="categoria === item" (click)="cambiarCategoria(item)">{{ item }}</button>
+    </div>
+  </section>
+
+  <section class="pinboard">
+    <div class="pinboard-head">
+      <div>
+        <p class="eyebrow">SELECCIÓN EDITORIAL</p>
+        <h2>Prendas para elegir con criterio</h2>
+        <small class="limit-note">Piezas premium con estilo contemporáneo.</small>
+      </div>
+      <span class="counter">{{ productos.length }} prendas</span>
+    </div>
+
+    <p class="loading" *ngIf="cargando">Cargando productos...</p>
+
+    <div class="masonry" *ngIf="!cargando">
+      <article class="pin-card" *ngFor="let producto of productos">
+        <div class="pin-image">
+          <img [src]="imagen(producto)" [alt]="producto.nombre" />
+          <span class="tag" *ngIf="producto.stock < 10">Últimas</span>
+          <button class="save-button" type="button" aria-label="Guardar producto">?</button>
+        </div>
+        <div class="pin-meta">
+          <div>
+            <p>{{ producto.categoria }}</p>
+            <h3>{{ producto.nombre }}</h3>
+            <small>{{ producto.color }} · Talla {{ producto.talla }}</small>
+          </div>
+          <strong>{{ producto.precio | currency:'PEN':'symbol':'1.2-2' }}</strong>
+        </div>
+        <div class="pin-actions">
+          <a class="ghost" [routerLink]="['/producto', producto.id]">Ver detalle</a>
+          <a class="add-cart" [routerLink]="['/producto', producto.id]">Elegir variante</a>
+        </div>
+      </article>
+    </div>
+
+    <p class="empty" *ngIf="!cargando && !productos.length">Pronto tendremos novedades para esta categoría.</p>
+  </section>
+
+  <aside class="cart-drawer" *ngIf="carritoAbierto">
+    <div class="cart-heading">
+      <div>
+        <p class="eyebrow">TU SELECCIÓN</p>
+        <h2>Carrito de compra</h2>
+      </div>
+      <button type="button" class="close-cart" (click)="alternarCarrito()" aria-label="Cerrar carrito">×</button>
+    </div>
+    <p class="empty" *ngIf="!carrito.items.length">Tu carrito está vacío.</p>
+    <div class="cart-line" *ngFor="let item of carrito.items">
+      <img [src]="imagen(item.producto)" [alt]="item.producto.nombre" />
+      <div>
+        <strong>{{ item.producto.nombre }}</strong>
+        <small>{{ item.variante.color }} / {{ item.variante.talla }} · {{ item.variante.precio | currency:'PEN':'symbol':'1.2-2' }}</small>
+        <div class="stepper">
+          <button type="button" (click)="carrito.reducir(item.variante.id)">-</button>
+          <span>{{ item.cantidad }}</span>
+          <button type="button" (click)="carrito.agregar(item.producto, item.variante)">+</button>
+        </div>
+      </div>
+      <button type="button" class="remove" (click)="carrito.quitar(item.variante.id)" aria-label="Quitar">×</button>
+    </div>
+    <div class="cart-total" *ngIf="carrito.items.length">
+      <span>Total</span>
+      <strong>{{ carrito.total | currency:'PEN':'symbol':'1.2-2' }}</strong>
+    </div>
+
+    <div class="checkout-form" *ngIf="carrito.items.length">
+      <label>
+        Cliente
+        <input type="text" [(ngModel)]="nombreCliente" placeholder="Tu nombre" />
+      </label>
+      <label>
+        Dirección de entrega
+        <input type="text" [(ngModel)]="direccionEnvio" placeholder="Av. principal 123" />
+      </label>
+      <p class="pedido-error" *ngIf="errorPedido">{{ errorPedido }}</p>
+      <p class="pedido-ok" *ngIf="mensajePedido">{{ mensajePedido }}</p>
+      <button class="checkout" type="button" [disabled]="!carrito.items.length || procesandoPedido" (click)="confirmarCompra()">
+        {{ procesandoPedido ? 'Procesando...' : 'Continuar compra' }} <span>↗</span>
+      </button>
+    </div>
+  </aside>
+
+  <footer class="store-footer">
+    <div class="brand"><span class="brand-mark">N</span><span>NOVA <small>STUDIO</small></span></div>
+    <p>Moda para tu propia historia.</p>
+    <small>© 2026 NOVA Studio</small>
+  </footer>
+</main>

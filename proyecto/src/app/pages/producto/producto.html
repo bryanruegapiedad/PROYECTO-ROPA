@@ -1,0 +1,28 @@
+<main class="product-detail" *ngIf="!cargando && producto">
+  <header class="detail-header">
+    <a class="brand" routerLink="/tienda"><span class="brand-mark">N</span><span>NOVA <small>STUDIO</small></span></a>
+    <div class="detail-actions"><a routerLink="/tienda">Seguir comprando</a><a routerLink="/checkout">Carrito ({{ carrito.cantidadTotal }})</a></div>
+  </header>
+
+  <section class="detail-layout">
+    <div class="gallery">
+      <div class="gallery-main"><img [src]="imagenActiva || producto.imagen" [alt]="producto.nombre" /></div>
+      <div class="gallery-thumbs"><button class="thumb" *ngFor="let imagen of imagenes" type="button" [class.active]="imagenActiva === imagen" (click)="imagenActiva = imagen"><img [src]="imagen" [alt]="producto.nombre" /></button></div>
+    </div>
+
+    <div class="product-copy">
+      <p class="eyebrow">NOVA / COLECCIÓN</p>
+      <p class="category">{{ producto.categoria }}</p>
+      <h1>{{ producto.nombre }}</h1>
+      <p class="price">{{ (variante?.precio || producto.precio) | currency:'PEN':'symbol':'1.2-2' }}</p>
+      <p class="description">{{ producto.descripcion || 'Una prenda diseñada para acompañarte con comodidad, carácter y acabados cuidados.' }}</p>
+
+      <section class="choice-block"><div class="choice-heading"><strong>COLOR</strong><span>{{ variante?.color }}</span></div><div class="swatches"><button *ngFor="let color of colores" type="button" [class.selected]="variante?.color === color" [attr.aria-label]="color" (click)="seleccionarColor(color)"><span [style.background]="color"></span></button></div></section>
+      <section class="choice-block"><div class="choice-heading"><strong>TALLA</strong><span>{{ variante?.talla }}</span></div><div class="sizes"><button *ngFor="let talla of tallas" type="button" [class.selected]="variante?.talla === talla" [disabled]="!disponible(talla)" (click)="seleccionarTalla(talla)">{{ talla }}</button></div></section>
+      <section class="choice-block"><div class="choice-heading"><strong>CANTIDAD</strong><span>{{ variante?.stock || 0 }} disponibles</span></div><div class="quantity"><button type="button" (click)="cambiarCantidad(-1)">-</button><strong>{{ cantidad }}</strong><button type="button" (click)="cambiarCantidad(1)">+</button></div></section>
+      <p class="message" *ngIf="mensaje">{{ mensaje }}</p><p class="error" *ngIf="error">{{ error }}</p>
+      <div class="purchase-actions"><button class="primary" type="button" (click)="agregar()">Agregar al carrito</button><button class="secondary" type="button" (click)="agregar(true)">Comprar ahora</button></div>
+    </div>
+  </section>
+</main>
+<p class="state" *ngIf="cargando">Cargando producto...</p><p class="state error" *ngIf="!cargando && !producto">{{ error }}</p>

@@ -1,0 +1,160 @@
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark">N</span>
+      <div>
+        <strong>NOVA</strong>
+        <small>STUDIO</small>
+      </div>
+    </div>
+
+    <p class="menu-label">GESTIÓN</p>
+    <nav>
+      <button class="active" type="button"><span>▦</span>Resumen</button>
+      <button type="button" (click)="irProductos()"><span>◇</span>Catálogo</button>
+      <button type="button" (click)="irPedidos()"><span>◌</span>Pedidos</button>
+      <button type="button"><span>♧</span>Clientes</button>
+    </nav>
+
+    <p class="menu-label secondary">ANÁLISIS</p>
+    <nav>
+      <button type="button"><span>↗</span>Ventas</button>
+      <button type="button"><span>◫</span>Reportes</button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span class="status-dot"></span>
+      <span>Todos los sistemas<br><small>operativos</small></span>
+    </div>
+  </aside>
+
+  <main class="contenido">
+    <header class="topbar">
+      <div>
+        <p class="overline">MARTES, 08 SEPTIEMBRE 2026</p>
+        <h1>Buenos días, Admin <span>✦</span></h1>
+        <p class="subtitle">Esto es lo que está pasando en tu boutique hoy.</p>
+      </div>
+      <div class="top-actions">
+        <button class="icon-button" type="button">⌕</button>
+        <button class="icon-button" type="button">♧<i></i></button>
+        <div class="avatar">AD</div>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div>
+        <p class="overline">COLECCIÓN OTOÑO / INVIERNO</p>
+        <h2>El estilo empieza<br>con una <em>buena elección.</em></h2>
+        <button class="hero-action" type="button" (click)="irProductos()">Ver catálogo <span>→</span></button>
+      </div>
+      <div class="hero-shape"><span>✦</span></div>
+    </section>
+
+    <section class="section-heading">
+      <div>
+        <p class="overline">VISTA GENERAL</p>
+        <h2>Resumen de inventario</h2>
+      </div>
+      <button class="date-filter" type="button">Últimos 30 días ⌄</button>
+    </section>
+
+    <section class="cards">
+      <article class="stat-card">
+        <div class="stat-icon lavender">▦</div>
+        <p>PRODUCTOS ACTIVOS</p>
+        <strong>{{ productos.length }}</strong>
+        <span class="trend up">↗ Catálogo actualizado</span>
+      </article>
+      <article class="stat-card">
+        <div class="stat-icon peach">◒</div>
+        <p>UNIDADES EN STOCK</p>
+        <strong>{{ totalStock }}</strong>
+        <span class="trend up">↗ Inventario disponible</span>
+      </article>
+      <article class="stat-card">
+        <div class="stat-icon mint">$</div>
+        <p>VALOR DEL INVENTARIO</p>
+        <strong>{{ valorInventario | currency:'PEN':'symbol':'1.0-0' }}</strong>
+        <span class="trend neutral">Valor estimado actual</span>
+      </article>
+      <article class="stat-card">
+        <div class="stat-icon rose">!</div>
+        <p>STOCK POR REVISAR</p>
+        <strong>{{ stockBajo }}</strong>
+        <span class="trend down">Requieren atención</span>
+      </article>
+    </section>
+
+    <section class="lower-grid">
+      <article class="panel">
+        <div class="panel-heading">
+          <div>
+            <p class="overline">INVENTARIO</p>
+            <h3>Productos recientes</h3>
+          </div>
+          <button class="text-action" type="button" (click)="irProductos()">Ver catálogo →</button>
+        </div>
+
+        <div class="product-list" *ngIf="!cargando; else loading">
+          <div class="product-row" *ngFor="let producto of productos | slice:0:4">
+            <div class="product-thumb" [style.background-image]="'url(' + imagenProducto(producto) + ')'" aria-label="Imagen de producto"></div>
+            <div class="product-info">
+              <strong>{{ producto.nombre }}</strong>
+              <small>{{ producto.sku }} · {{ producto.color }}</small>
+            </div>
+            <span class="category">{{ producto.categoria }}</span>
+            <strong class="price">{{ producto.precio | currency:'PEN':'symbol':'1.2-2' }}</strong>
+            <span class="stock" [class.low]="producto.stock < 10">{{ producto.stock }} uds.</span>
+          </div>
+        </div>
+
+        <ng-template #loading>
+          <p class="empty">Cargando inventario...</p>
+        </ng-template>
+
+        <p class="empty" *ngIf="!cargando && !productos.length">No hay productos registrados.</p>
+      </article>
+
+      <article class="panel performance">
+        <div class="panel-heading">
+          <div>
+            <p class="overline">RENDIMIENTO</p>
+            <h3>Actividad de ventas</h3>
+          </div>
+          <span class="pill">+12.8% ↗</span>
+        </div>
+
+        <div class="chart">
+          <div class="chart-values">
+            <span>S/ 8k</span>
+            <span>S/ 6k</span>
+            <span>S/ 4k</span>
+            <span>S/ 2k</span>
+            <span>S/ 0</span>
+          </div>
+          <div class="bars">
+            <i style="height:35%"></i>
+            <i style="height:52%"></i>
+            <i style="height:42%"></i>
+            <i style="height:68%"></i>
+            <i style="height:58%"></i>
+            <i style="height:82%"></i>
+            <i style="height:74%"></i>
+            <i style="height:92%"></i>
+          </div>
+        </div>
+
+        <div class="days">
+          <span>Lun</span>
+          <span>Mar</span>
+          <span>Mié</span>
+          <span>Jue</span>
+          <span>Vie</span>
+          <span>Sáb</span>
+          <span>Dom</span>
+        </div>
+      </article>
+    </section>
+  </main>
+</div>
