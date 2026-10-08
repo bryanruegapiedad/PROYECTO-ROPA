@@ -41,10 +41,12 @@ export class Dashboard {
   imagenProducto(producto: Producto): string {
     if (producto.imagen?.trim()) return producto.imagen;
     const nombre = producto.nombre.toLowerCase();
-    if (nombre.includes('jean') || nombre.includes('pantal')) return 'https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=500&q=80';
-    if (nombre.includes('vestido')) return 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=500&q=80';
-    if (nombre.includes('casaca') || nombre.includes('blazer')) return 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=500&q=80';
-    return 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=500&q=80';
+    if (nombre.includes('jean') || nombre.includes('pantal')) return 'assets/images/products/pantalones/jean-clasico-azul.jpg';
+    if (nombre.includes('polera')) return 'assets/images/products/poleras/polera-basica-negra.png';
+    if (nombre.includes('blusa')) return 'assets/images/products/blusas/blusa-basica-azul.jpg';
+    if (nombre.includes('vestido')) return 'assets/images/products/vestidos/vestido-casual-rojo.jpg';
+    if (nombre.includes('casaca') || nombre.includes('blazer')) return 'assets/images/products/polos/polo-basico-negro.jpg';
+    return 'assets/images/products/polos/polo-basico-negro.jpg';
   }
 
   irProductos() {

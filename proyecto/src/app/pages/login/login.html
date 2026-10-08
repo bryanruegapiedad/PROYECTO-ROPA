@@ -15,19 +15,23 @@
         @if (error) { <p class="form-error" role="alert">{{ error }}</p> }
         @if (modoRegistro) {
           <label for="nombre">NOMBRE COMPLETO</label>
-          <div class="input-wrap"><span class="input-icon" aria-hidden="true">◌</span><input id="nombre" name="nombre" type="text" placeholder="Tu nombre" [(ngModel)]="nombre" required autocomplete="name"></div>
+          <div class="input-wrap"><span class="input-icon" aria-hidden="true">◌</span><input id="nombre" name="nombre" type="text" placeholder="Tu nombre completo" [(ngModel)]="nombre" required minlength="2" maxlength="100" autocomplete="name" (input)="error = ''"></div>
           <label for="correo">CORREO ELECTRÓNICO</label>
-          <div class="input-wrap"><span class="input-icon" aria-hidden="true">@</span><input id="correo" name="correo" type="email" placeholder="tu@correo.com" [(ngModel)]="correo" required email autocomplete="email"></div>
+          <div class="input-wrap"><span class="input-icon" aria-hidden="true">@</span><input id="correo" name="correo" type="email" placeholder="tu@gmail.com o tu@hotmail.com" [(ngModel)]="correo" required email [pattern]="patronCorreo" autocomplete="email" (input)="error = ''"></div>
+          <small class="field-hint" *ngIf="correo && !correoValido(correo)">Solo se aceptan direcciones @gmail.com o @hotmail.com.</small>
         }
         <label for="usuario">USUARIO</label>
-        <div class="input-wrap"><span class="input-icon" aria-hidden="true">◌</span><input id="usuario" name="usuario" type="text" placeholder="Tu nombre de usuario" [(ngModel)]="usuario" required autocomplete="username"></div>
+        <div class="input-wrap"><span class="input-icon" aria-hidden="true">◌</span><input id="usuario" name="usuario" type="text" placeholder="{{ modoRegistro ? 'Elige un usuario' : 'Usuario o correo' }}" [(ngModel)]="usuario" required [attr.minlength]="modoRegistro ? 3 : null" [attr.maxlength]="modoRegistro ? 30 : null" [attr.pattern]="modoRegistro ? patronUsuario : null" autocomplete="username" (input)="error = ''"></div>
         <div class="password-heading"><label for="clave">CONTRASEÑA</label><button *ngIf="!modoRegistro" class="link-button" type="button" (click)="abrirRecuperacion()">¿La olvidaste?</button></div>
-        <div class="input-wrap"><span class="input-icon" aria-hidden="true">⌁</span><input id="clave" name="clave" [type]="mostrarClave ? 'text' : 'password'" placeholder="••••••••" [(ngModel)]="clave" required autocomplete="current-password"><button class="visibility" type="button" (click)="mostrarClave = !mostrarClave" [attr.aria-label]="mostrarClave ? 'Ocultar contraseña' : 'Mostrar contraseña'">{{ mostrarClave ? 'Ocultar' : 'Ver' }}</button></div>
+        <div class="input-wrap"><span class="input-icon" aria-hidden="true">⌁</span><input id="clave" name="clave" [type]="mostrarClave ? 'text' : 'password'" placeholder="••••••••" [(ngModel)]="clave" [attr.minlength]="modoRegistro ? 6 : null" required [attr.autocomplete]="modoRegistro ? 'new-password' : 'current-password'" (input)="error = ''"><button class="visibility" type="button" (click)="mostrarClave = !mostrarClave" [attr.aria-label]="mostrarClave ? 'Ocultar contraseña' : 'Mostrar contraseña'">{{ mostrarClave ? 'Ocultar' : 'Ver' }}</button></div>
+        <small class="field-hint" *ngIf="modoRegistro && clave && clave.length < 6">La contraseña debe tener al menos 6 caracteres.</small>
+        <div class="password-strength" *ngIf="modoRegistro && clave" [attr.data-level]="nivelClave" aria-live="polite"><span class="strength-bars"><i *ngFor="let barra of [1, 2, 3, 4]" [class.filled]="nivelClave >= barra"></i></span><small>Seguridad: {{ textoFortaleza }}</small></div>
         @if (modoRegistro) {
           <label for="confirmarClave">CONFIRMAR CONTRASEÑA</label>
-          <div class="input-wrap"><span class="input-icon" aria-hidden="true">⌁</span><input id="confirmarClave" name="confirmarClave" type="password" placeholder="Repite tu contraseña" [(ngModel)]="confirmarClave" required autocomplete="new-password"></div>
+          <div class="input-wrap"><span class="input-icon" aria-hidden="true">⌁</span><input id="confirmarClave" name="confirmarClave" [type]="mostrarConfirmacion ? 'text' : 'password'" placeholder="Repite tu contraseña" [(ngModel)]="confirmarClave" required autocomplete="new-password"><button class="visibility" type="button" (click)="mostrarConfirmacion = !mostrarConfirmacion" [attr.aria-label]="mostrarConfirmacion ? 'Ocultar confirmación' : 'Mostrar confirmación'">{{ mostrarConfirmacion ? 'Ocultar' : 'Ver' }}</button></div>
+          <small class="field-hint" *ngIf="confirmarClave && clave !== confirmarClave">Las contraseñas no coinciden.</small>
         }
-        <button class="primary-button" [class.register-button]="modoRegistro" type="submit" [disabled]="loginForm.invalid || cargando"><span>{{ cargando ? (modoRegistro ? 'Registrando...' : 'Iniciando sesión...') : (modoRegistro ? 'Crear cuenta' : 'Iniciar sesión') }}</span><span aria-hidden="true">↗</span></button>
+        <button class="primary-button" [class.register-button]="modoRegistro" type="submit" [disabled]="loginForm.invalid || cargando || (modoRegistro && clave !== confirmarClave)"><span>{{ cargando ? (modoRegistro ? 'Registrando...' : 'Iniciando sesión...') : (modoRegistro ? 'Crear cuenta' : 'Iniciar sesión') }}</span><span aria-hidden="true">↗</span></button>
       </form>
       @if (!modoRegistro) { <p class="demo"><span>DEMO</span> admin / 1234</p> }
       <p class="legal">Al continuar aceptas nuestros <a href="#">términos de uso</a> y <a href="#">política de privacidad</a>.</p>
@@ -39,7 +43,7 @@
         <button class="close-button" type="button" (click)="cerrarRecuperacion()" aria-label="Cerrar recuperación">×</button><span class="recovery-icon">✦</span><p class="eyebrow">RECUPERACIÓN</p><h2 id="recovery-title">Recupera tu acceso</h2>
         @if (!recuperacionEnviada) {
           <p>Escribe tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
-          <form (ngSubmit)="enviarRecuperacion()" #recoveryForm="ngForm"><label for="correo">CORREO ELECTRÓNICO</label><input id="correo" name="correo" type="email" placeholder="nombre@empresa.com" [(ngModel)]="correoRecuperacion" required email autocomplete="email"><button class="primary-button" type="submit" [disabled]="recoveryForm.invalid">Enviar enlace <span>↗</span></button></form>
+          <form (ngSubmit)="enviarRecuperacion()" #recoveryForm="ngForm"><label for="correo">CORREO ELECTRÓNICO</label><input id="correo" name="correo" type="email" placeholder="nombre@gmail.com o nombre@hotmail.com" [(ngModel)]="correoRecuperacion" required email [pattern]="patronCorreo" autocomplete="email"><small class="field-hint" *ngIf="correoRecuperacion && !correoValido(correoRecuperacion)">Solo se aceptan direcciones @gmail.com o @hotmail.com.</small><button class="primary-button" type="submit" [disabled]="recoveryForm.invalid">Enviar enlace <span>↗</span></button></form>
         } @else {
           <p class="success-message">Si existe una cuenta asociada a <strong>{{ correoRecuperacion }}</strong>, recibirás las instrucciones.</p><button class="primary-button" type="button" (click)="cerrarRecuperacion()">Volver al inicio</button>
         }

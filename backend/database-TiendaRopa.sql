@@ -18,6 +18,7 @@ GO
 
 CREATE TABLE dbo.usuarios (
   IdUsuario INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+  Usuario VARCHAR(100) NULL,
   Nombre VARCHAR(100) NOT NULL,
   Apellido VARCHAR(100) NOT NULL,
   Correo VARCHAR(150) NOT NULL,
@@ -29,6 +30,8 @@ CREATE TABLE dbo.usuarios (
   CreadoEn DATETIME2 NOT NULL CONSTRAINT DF_usuarios_CreadoEn DEFAULT SYSDATETIME(),
   CONSTRAINT CK_usuarios_rol CHECK (Rol IN ('vendedor', 'administrador', 'cliente'))
 );
+GO
+CREATE UNIQUE INDEX UX_usuarios_Usuario ON dbo.usuarios (Usuario) WHERE Usuario IS NOT NULL;
 GO
 
 CREATE TABLE dbo.productos (

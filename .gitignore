@@ -15,3 +15,5 @@ dist/
 target/
 .bsp/
 .metals/
+backend-scala/.sbt-boot/
+backend-scala/.sbt-global/

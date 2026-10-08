@@ -1,0 +1,102 @@
+<div class="cart-backdrop" *ngIf="abierto" (click)="cerrar()">
+  <aside
+    id="cart-drawer"
+    class="cart-drawer"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="cart-title"
+    (click)="$event.stopPropagation()"
+  >
+    <header class="cart-header">
+      <div>
+        <p class="cart-kicker">NOVA / TU SELECCIÓN</p>
+        <h2 id="cart-title">Tu carrito</h2>
+        <p class="cart-count">
+          {{ carrito.cantidadTotal }}
+          {{ carrito.cantidadTotal === 1 ? 'artículo' : 'artículos' }}
+        </p>
+      </div>
+      <button class="cart-close" type="button" (click)="cerrar()" aria-label="Cerrar carrito">
+        <span aria-hidden="true">×</span>
+      </button>
+    </header>
+
+    <section class="cart-empty" *ngIf="!carrito.items.length">
+      <span class="empty-icon" aria-hidden="true">
+        <svg viewBox="0 0 48 48" fill="none">
+          <path d="M9 17h30l-2.4 23H11.4L9 17Z" stroke="currentColor" stroke-width="1.5" />
+          <path d="M17 18v-4a7 7 0 0 1 14 0v4" stroke="currentColor" stroke-width="1.5" />
+        </svg>
+      </span>
+      <h3>Tu próxima prenda favorita<br />te está esperando.</h3>
+      <p>Explora la colección y añade algo especial a tu selección.</p>
+      <button type="button" class="continue-link" (click)="cerrar()">Explorar colección <span>↗</span></button>
+    </section>
+
+    <ng-container *ngIf="carrito.items.length">
+      <p class="shipping-message" *ngIf="carrito.faltaParaEnvioGratis > 0">
+        Te faltan <strong>{{ carrito.faltaParaEnvioGratis | currency:'PEN':'symbol':'1.2-2' }}</strong>
+        para obtener envío gratis.
+      </p>
+      <p class="shipping-message shipping-earned" *ngIf="carrito.faltaParaEnvioGratis === 0">
+        ¡Tu pedido califica para envío gratis!
+      </p>
+      <div
+        class="shipping-progress"
+        role="progressbar"
+        aria-label="Progreso para obtener envío gratis"
+        [attr.aria-valuenow]="carrito.progresoEnvioGratis"
+        aria-valuemin="0"
+        aria-valuemax="100"
+      >
+        <span [style.width.%]="carrito.progresoEnvioGratis"></span>
+      </div>
+
+      <div class="cart-items">
+        <article class="cart-item" *ngFor="let item of carrito.items">
+          <img
+            class="item-image"
+            [src]="item.variante.imagen || item.producto.imagenPrincipal || item.producto.imagen || 'assets/images/products/polos/polo-basico-negro.jpg'"
+            [alt]="item.producto.nombre"
+          />
+          <div class="item-details">
+            <div class="item-title-row">
+              <div>
+                <p class="item-category">{{ item.producto.categoria }}</p>
+                <h3>{{ item.producto.nombre }}</h3>
+              </div>
+              <strong class="item-total">{{ item.variante.precio * item.cantidad | currency:'PEN':'symbol':'1.2-2' }}</strong>
+            </div>
+            <p class="item-variant">{{ item.variante.color }} <span>·</span> Talla {{ item.variante.talla }}</p>
+            <div class="item-controls">
+              <div class="quantity-control" [attr.aria-label]="'Cantidad: ' + item.cantidad">
+                <button type="button" (click)="decrementar(item)" [attr.aria-label]="'Reducir cantidad de ' + item.producto.nombre">−</button>
+                <span aria-live="polite">{{ item.cantidad }}</span>
+                <button
+                  type="button"
+                  (click)="incrementar(item)"
+                  [disabled]="item.cantidad >= item.variante.stock"
+                  [attr.aria-label]="'Aumentar cantidad de ' + item.producto.nombre"
+                >+</button>
+              </div>
+              <button class="remove-item" type="button" (click)="carrito.quitar(item.variante.id)">Eliminar</button>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <footer class="cart-footer">
+        <div class="cart-subtotal">
+          <span>Subtotal</span>
+          <strong>{{ carrito.total | currency:'PEN':'symbol':'1.2-2' }}</strong>
+        </div>
+        <p class="shipping-note">Envío y pago se confirman en el siguiente paso.</p>
+        <a class="checkout-button" routerLink="/checkout" (click)="cerrar()">
+          Continuar al checkout <span aria-hidden="true">↗</span>
+        </a>
+        <button class="continue-link footer-continue" type="button" (click)="cerrar()">Seguir explorando</button>
+        <p class="secure-note"><span aria-hidden="true">✓</span> Compra segura · Tus datos están protegidos</p>
+      </footer>
+    </ng-container>
+  </aside>
+</div>

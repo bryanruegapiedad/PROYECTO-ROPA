@@ -33,7 +33,8 @@
     var(--bg);
   color: var(--text);
   font-family: Inter, "Segoe UI", sans-serif;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .login-shell::before {
@@ -93,7 +94,7 @@
   padding: 34px 34px 28px;
   background:
     linear-gradient(135deg, rgba(16, 23, 35, 0.72), rgba(10, 13, 25, 0.5)),
-    url("https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1200&q=85") center/cover;
+    url("/assets/images/products/blusas/blusa-basica-blanca.jpg") center/cover;
 }
 
 .visual-panel::after {
@@ -375,6 +376,39 @@ input::placeholder {
   font-size: 0.82rem;
 }
 
+.password-strength {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin: -4px 2px 8px;
+}
+
+.password-strength small {
+  font-size: 11px;
+}
+
+.strength-bars {
+  display: flex;
+  flex: 1;
+  gap: 5px;
+  max-width: 150px;
+}
+
+.strength-bars i {
+  background: rgba(160, 175, 215, 0.22);
+  border-radius: 99px;
+  height: 5px;
+  flex: 1;
+  transition: background-color 0.2s ease;
+}
+
+.password-strength[data-level="1"] .strength-bars i.filled { background: #ff8ba2; }
+.password-strength[data-level="2"] .strength-bars i.filled { background: #f2bd75; }
+.password-strength[data-level="3"] .strength-bars i.filled { background: #a9df9b; }
+.password-strength[data-level="4"] .strength-bars i.filled { background: var(--accent); }
+
 .demo {
   margin: 18px 0 0;
   color: #b7c6e5;
@@ -511,3 +545,6 @@ input::placeholder {
     margin-bottom: 18px;
   }
 }
+.field-hint{color:#ad766b;display:block;font-size:11px;margin:-8px 0 12px 2px}
+
+.form-error-feedback{margin-top:12px}

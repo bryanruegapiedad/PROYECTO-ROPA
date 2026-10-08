@@ -52,6 +52,7 @@ if (hasDbConfig) {
         },
       };
 
+  config.requestTimeout = Number(process.env.DB_REQUEST_TIMEOUT || 10000);
   pool = new sql.ConnectionPool(config);
 
   console.log(`SQL Server enabled. Connecting to database ${process.env.DB_NAME}...`);
@@ -82,6 +83,14 @@ let siguientePedidoId = 1;
 async function ensureDatabase() {
   if (!pool) return;
   const fashionSchema = await pool.request().query("SELECT CASE WHEN COL_LENGTH('dbo.productos', 'Descripcion') IS NOT NULL AND COL_LENGTH('dbo.producto_variantes', 'CodigoSKU') IS NOT NULL THEN 1 ELSE 0 END AS enabled");
+  await pool.request().query(`
+    IF OBJECT_ID('dbo.usuarios', 'U') IS NOT NULL
+    BEGIN
+      IF COL_LENGTH('dbo.usuarios', 'Usuario') IS NULL ALTER TABLE dbo.usuarios ADD Usuario VARCHAR(100) NULL;
+      IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('dbo.usuarios') AND name = 'UX_usuarios_Usuario')
+        CREATE UNIQUE INDEX UX_usuarios_Usuario ON dbo.usuarios(Usuario) WHERE Usuario IS NOT NULL;
+    END
+  `);
   if (fashionSchema.recordset[0].enabled === 1) {
     console.log('Esquema TiendaRopa detectado; se conserva su modelo de moda.');
     return;
@@ -205,6 +214,9 @@ async function ensureDatabase() {
     IF COL_LENGTH('dbo.usuarios', 'PasswordHash') IS NULL ALTER TABLE usuarios ADD PasswordHash VARCHAR(255) NULL;
     IF COL_LENGTH('dbo.usuarios', 'Correo') IS NULL ALTER TABLE usuarios ADD Correo VARCHAR(255) NULL;
     IF COL_LENGTH('dbo.usuarios', 'Activo') IS NULL ALTER TABLE usuarios ADD Activo BIT NOT NULL CONSTRAINT DF_usuarios_activo DEFAULT 1;
+    IF COL_LENGTH('dbo.usuarios', 'Usuario') IS NULL ALTER TABLE usuarios ADD Usuario VARCHAR(100) NULL;
+    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('dbo.usuarios') AND name = 'UX_usuarios_Usuario')
+      CREATE UNIQUE INDEX UX_usuarios_Usuario ON dbo.usuarios(Usuario) WHERE Usuario IS NOT NULL;
   `);
   const legacyUsers = await pool.request().query('SELECT IdUsuario, Usuario, Clave FROM usuarios WHERE PasswordHash IS NULL');
   for (const legacyUser of legacyUsers.recordset) {
@@ -292,6 +304,36 @@ app.get('/productos', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error al listar productos' });
+  }
+});
+
+app.get('/productos/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: 'El identificador del producto no es válido.' });
+  }
+
+  try {
+    const producto = (await getProductos()).find(item => Number(item.id) === id && item.activo !== false);
+    if (!producto) return res.status(404).json({ error: 'No encontramos esta prenda. Puede que ya no esté disponible.' });
+
+    const variante = {
+      id: producto.id,
+      talla: producto.talla || 'Única',
+      color: producto.color || 'Negro',
+      stock: Number(producto.stock) || 0,
+      precio: Number(producto.precio) || 0,
+      sku: producto.sku || `NOVA-${producto.id}`,
+    };
+    return res.json({
+      ...producto,
+      descripcion: producto.descripcion || `Prenda ${producto.nombre} de nuestra colección.`,
+      variantes: [variante],
+      imagenes: producto.imagen ? [{ url: producto.imagen, alt: producto.nombre, orden: 0 }] : [],
+    });
+  } catch (error) {
+    console.error('Error al cargar detalle del producto:', error);
+    return res.status(500).json({ error: 'No se pudo cargar esta prenda. Inténtalo de nuevo.' });
   }
 });
 
@@ -435,6 +477,9 @@ app.post('/registro', async (req, res) => {
   const usuario = String(req.body.usuario || '').trim().toLowerCase();
   const correo = String(req.body.correo || '').trim().toLowerCase();
   const clave = String(req.body.clave || '');
+  if (nombre.length < 2 || nombre.length > 100) return res.status(400).json({ error: 'Escribe tu nombre completo.' });
+  if (!/^[a-z0-9._-]{3,30}$/.test(usuario)) return res.status(400).json({ error: 'El usuario debe tener entre 3 y 30 caracteres (letras, números, punto, guion o guion bajo).' });
+  if (!/^[^\s@]+@(gmail|hotmail)\.com$/i.test(correo)) return res.status(400).json({ error: 'Usa un correo @gmail.com o @hotmail.com.' });
   if (!nombre || !usuario || !correo || clave.length < 6) {
     return res.status(400).json({ error: 'Completa todos los campos. La contraseña debe tener al menos 6 caracteres.' });
   }
@@ -455,8 +500,10 @@ app.post('/registro', async (req, res) => {
     }
 
     const esquemaModa = await pool.request().query("SELECT CASE WHEN COL_LENGTH('dbo.usuarios', 'Contrasena') IS NOT NULL THEN 1 ELSE 0 END AS enabled");
-    const duplicado = await pool.request().input('correo', sql.VarChar(150), correo)
-      .query('SELECT TOP 1 IdUsuario FROM usuarios WHERE Correo = @correo');
+    const duplicado = await pool.request()
+      .input('correo', sql.VarChar(150), correo)
+      .input('usuario', sql.VarChar(100), usuario)
+      .query('SELECT TOP 1 IdUsuario FROM usuarios WHERE Correo = @correo OR Usuario = @usuario');
     if (duplicado.recordset.length) return res.status(409).json({ error: 'El correo ya está registrado.' });
 
     const nombres = nombre.split(/\s+/);
@@ -467,8 +514,9 @@ app.post('/registro', async (req, res) => {
         .input('nombre', sql.VarChar(100), nombrePrincipal)
         .input('apellido', sql.VarChar(100), apellido)
         .input('correo', sql.VarChar(150), correo)
+        .input('usuario', sql.VarChar(100), usuario)
         .input('contrasena', sql.VarChar(255), passwordHash)
-        .query("INSERT INTO usuarios (Nombre, Apellido, Correo, Contrasena, Rol, Activo) VALUES (@nombre, @apellido, @correo, @contrasena, 'cliente', 1)");
+        .query("INSERT INTO usuarios (Nombre, Apellido, Correo, Usuario, Contrasena, Rol, Activo) VALUES (@nombre, @apellido, @correo, @usuario, @contrasena, 'cliente', 1)");
       const creado = await pool.request().input('correo', sql.VarChar(150), correo)
         .query('SELECT TOP 1 IdUsuario FROM usuarios WHERE Correo = @correo ORDER BY IdUsuario DESC');
       const idUsuario = creado.recordset[0].IdUsuario;
@@ -519,8 +567,24 @@ app.post('/pedidos', requireAuth, (req, res) => {
   if (!cliente || !items.length) return res.status(400).json({ error: 'Indica el cliente y al menos un producto.' });
   if (!direccionEnvio) return res.status(400).json({ error: 'Ingresa la dirección de entrega.' });
 
+  for (const item of items) {
+    const productoId = Number(item.productoId ?? item.varianteId);
+    const producto = productos.find(candidate => candidate.id === productoId);
+    const cantidad = Number(item.cantidad);
+    if (!producto || !Number.isInteger(cantidad) || cantidad < 1) {
+      return res.status(400).json({ error: 'El producto o la cantidad del pedido no son válidos.' });
+    }
+    const totalSolicitado = items
+      .filter(linea => Number(linea.productoId ?? linea.varianteId) === productoId)
+      .reduce((total, linea) => total + Number(linea.cantidad), 0);
+    if (totalSolicitado > producto.stock) {
+      return res.status(400).json({ error: `Stock insuficiente para ${producto.nombre}.` });
+    }
+  }
+
   const detalle = items.map(item => {
-    const producto = productos.find(candidate => candidate.id === Number(item.productoId));
+    const idProducto = Number(item.productoId ?? item.varianteId);
+    const producto = productos.find(candidate => candidate.id === idProducto);
     const cantidad = Number(item.cantidad);
     if (!producto || !Number.isInteger(cantidad) || cantidad < 1) throw new Error('Producto o cantidad inválida');
     if (cantidad > producto.stock) throw new Error(`Stock insuficiente para ${producto.nombre}`);
@@ -560,7 +624,8 @@ app.post('/login', async (req, res) => {
   if (!JWT_SECRET) return res.status(503).json({ error: 'Autenticación no configurada' });
   if (attempt?.blockedUntil > Date.now()) return res.status(429).json({ error: 'Demasiados intentos. Intenta nuevamente en 15 minutos.' });
   if (!pool) {
-    const user = usuariosMemoria.find(item => item.usuario === loginUsername || item.correo === loginUsername);
+    const loginIdentifier = loginUsername.toLowerCase();
+    const user = usuariosMemoria.find(item => item.usuario.toLowerCase() === loginIdentifier || item.correo.toLowerCase() === loginIdentifier);
     if (!user || !(await bcrypt.compare(loginPassword, user.passwordHash))) {
       return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
     }
@@ -574,7 +639,7 @@ app.post('/login', async (req, res) => {
     const fashionSchema = await pool.request().query("SELECT CASE WHEN COL_LENGTH('dbo.usuarios', 'Contrasena') IS NOT NULL THEN 1 ELSE 0 END AS enabled");
     if (fashionSchema.recordset[0].enabled === 1) {
       const result = await pool.request().input('username', sql.VarChar(255), loginUsername)
-        .query('SELECT IdUsuario, Correo, Contrasena, Rol FROM usuarios WHERE (Correo = @username OR CAST(IdUsuario AS VARCHAR(20)) = @username) AND Activo = 1');
+        .query('SELECT IdUsuario, Usuario, Correo, Contrasena, Rol FROM usuarios WHERE (LOWER(Correo) = LOWER(@username) OR LOWER(Usuario) = LOWER(@username) OR CAST(IdUsuario AS VARCHAR(20)) = @username) AND Activo = 1');
       const user = result.recordset[0];
       const valid = user && (String(user.Contrasena || '').startsWith('$2') ? await bcrypt.compare(loginPassword, user.Contrasena) : loginPassword === user.Contrasena);
       if (!valid) return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
@@ -610,6 +675,7 @@ app.post('/login', async (req, res) => {
 app.post('/recuperar-clave', async (req, res) => {
   const correo = String(req.body.correo || '').trim().toLowerCase();
   if (!correo) return res.status(400).json({ error: 'El correo es requerido' });
+  if (!/^[^\s@]+@(gmail|hotmail)\.com$/i.test(correo)) return res.status(400).json({ error: 'Usa un correo @gmail.com o @hotmail.com.' });
   if (!pool) return res.status(503).json({ error: 'Autenticación no configurada' });
   try {
     const result = await pool.request().input('correo', sql.VarChar(255), correo)

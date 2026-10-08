@@ -6,7 +6,7 @@
       <a class="active" routerLink="/tienda/categoria/mujeres">Categorías</a>
     </nav>
     <div class="header-actions">
-      <button class="cart-button" type="button" (click)="alternarCarrito()">Carrito <span>{{ carrito.cantidadTotal }}</span></button>
+      <button class="cart-button" type="button" (click)="alternarCarrito()" aria-controls="cart-drawer" [attr.aria-expanded]="carritoAbierto">Carrito <span>{{ carrito.cantidadTotal }}</span></button>
       <button class="outline-button" type="button" (click)="cerrarSesion()">Salir</button>
       <span class="user-mark">U</span>
     </div>
@@ -77,49 +77,7 @@
     <p class="empty" *ngIf="!cargando && !productos.length">Pronto tendremos novedades para esta categoría.</p>
   </section>
 
-  <aside class="cart-drawer" *ngIf="carritoAbierto">
-    <div class="cart-heading">
-      <div>
-        <p class="eyebrow">TU SELECCIÓN</p>
-        <h2>Carrito de compra</h2>
-      </div>
-      <button type="button" class="close-cart" (click)="alternarCarrito()" aria-label="Cerrar carrito">×</button>
-    </div>
-    <p class="empty" *ngIf="!carrito.items.length">Tu carrito está vacío.</p>
-    <div class="cart-line" *ngFor="let item of carrito.items">
-      <img [src]="imagen(item.producto)" [alt]="item.producto.nombre" />
-      <div>
-        <strong>{{ item.producto.nombre }}</strong>
-        <small>{{ item.variante.color }} / {{ item.variante.talla }} · {{ item.variante.precio | currency:'PEN':'symbol':'1.2-2' }}</small>
-        <div class="stepper">
-          <button type="button" (click)="carrito.reducir(item.variante.id)">-</button>
-          <span>{{ item.cantidad }}</span>
-          <button type="button" (click)="carrito.agregar(item.producto, item.variante)">+</button>
-        </div>
-      </div>
-      <button type="button" class="remove" (click)="carrito.quitar(item.variante.id)" aria-label="Quitar">×</button>
-    </div>
-    <div class="cart-total" *ngIf="carrito.items.length">
-      <span>Total</span>
-      <strong>{{ carrito.total | currency:'PEN':'symbol':'1.2-2' }}</strong>
-    </div>
-
-    <div class="checkout-form" *ngIf="carrito.items.length">
-      <label>
-        Cliente
-        <input type="text" [(ngModel)]="nombreCliente" placeholder="Tu nombre" />
-      </label>
-      <label>
-        Dirección de entrega
-        <input type="text" [(ngModel)]="direccionEnvio" placeholder="Av. principal 123" />
-      </label>
-      <p class="pedido-error" *ngIf="errorPedido">{{ errorPedido }}</p>
-      <p class="pedido-ok" *ngIf="mensajePedido">{{ mensajePedido }}</p>
-      <button class="checkout" type="button" [disabled]="!carrito.items.length || procesandoPedido" (click)="confirmarCompra()">
-        {{ procesandoPedido ? 'Procesando...' : 'Continuar compra' }} <span>↗</span>
-      </button>
-    </div>
-  </aside>
+  <app-carrito-drawer [abierto]="carritoAbierto" (cerrado)="cerrarCarrito()"></app-carrito-drawer>
 
   <footer class="store-footer">
     <div class="brand"><span class="brand-mark">N</span><span>NOVA <small>STUDIO</small></span></div>

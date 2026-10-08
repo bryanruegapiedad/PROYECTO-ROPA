@@ -17,7 +17,12 @@
       <p class="price">{{ (variante?.precio || producto.precio) | currency:'PEN':'symbol':'1.2-2' }}</p>
       <p class="description">{{ producto.descripcion || 'Una prenda diseñada para acompañarte con comodidad, carácter y acabados cuidados.' }}</p>
 
-      <section class="choice-block"><div class="choice-heading"><strong>COLOR</strong><span>{{ variante?.color }}</span></div><div class="swatches"><button *ngFor="let color of colores" type="button" [class.selected]="variante?.color === color" [attr.aria-label]="color" (click)="seleccionarColor(color)"><span [style.background]="color"></span></button></div></section>
+      <aside class="prolog-tip" *ngIf="recomendacion">
+        <p class="eyebrow">RECOMENDACIÓN</p>
+        <p>{{ recomendacion }}</p>
+      </aside>
+
+      <section class="choice-block"><div class="choice-heading"><strong>COLOR</strong><span>{{ variante?.color }}</span></div><div class="swatches"><button *ngFor="let color of colores" type="button" [class.selected]="variante?.color === color" [attr.aria-label]="color" (click)="seleccionarColor(color)"><span [style.background]="getColorHex(color)"></span></button></div></section>
       <section class="choice-block"><div class="choice-heading"><strong>TALLA</strong><span>{{ variante?.talla }}</span></div><div class="sizes"><button *ngFor="let talla of tallas" type="button" [class.selected]="variante?.talla === talla" [disabled]="!disponible(talla)" (click)="seleccionarTalla(talla)">{{ talla }}</button></div></section>
       <section class="choice-block"><div class="choice-heading"><strong>CANTIDAD</strong><span>{{ variante?.stock || 0 }} disponibles</span></div><div class="quantity"><button type="button" (click)="cambiarCantidad(-1)">-</button><strong>{{ cantidad }}</strong><button type="button" (click)="cambiarCantidad(1)">+</button></div></section>
       <p class="message" *ngIf="mensaje">{{ mensaje }}</p><p class="error" *ngIf="error">{{ error }}</p>
@@ -25,4 +30,16 @@
     </div>
   </section>
 </main>
-<p class="state" *ngIf="cargando">Cargando producto...</p><p class="state error" *ngIf="!cargando && !producto">{{ error }}</p>
+<main class="load-state" *ngIf="cargando" role="status" aria-live="polite">
+  <span class="load-spinner" aria-hidden="true"></span>
+  <p>Cargando producto...</p>
+</main>
+<main class="load-state load-error" *ngIf="!cargando && !producto" role="alert">
+  <span class="error-mark" aria-hidden="true">!</span>
+  <h1>No pudimos abrir esta prenda</h1>
+  <p>{{ error || 'Inténtalo nuevamente en unos segundos.' }}</p>
+  <div class="load-actions">
+    <button type="button" (click)="cargarProducto()">Intentar de nuevo</button>
+    <a routerLink="/tienda">Volver a la tienda</a>
+  </div>
+</main>

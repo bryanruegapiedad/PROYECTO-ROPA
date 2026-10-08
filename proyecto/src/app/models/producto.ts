@@ -5,6 +5,7 @@ export interface VarianteProducto {
   stock: number;
   precio: number;
   sku: string;
+  imagen?: string;
 }
 
 export interface ImagenProducto {
@@ -24,8 +25,18 @@ export interface Producto {
   genero?: string;
   talla: string;
   color: string;
-  imagen: string;
+  imagen?: string;
+  imagenPrincipal?: string;
   activo: boolean;
+  colores?: string[];
+  tallas?: string[];
   variantes?: VarianteProducto[];
   imagenes?: ImagenProducto[];
+}
+
+export interface RecomendacionProducto {
+  categoria: string;
+  talla: string;
+  color: string;
+  mensaje: string;
 }

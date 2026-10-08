@@ -7,7 +7,7 @@
       <a href="#novedades">Novedades</a>
     </nav>
     <div class="header-actions">
-      <button class="cart-button" type="button" (click)="alternarCarrito()">Carrito <span>{{ carrito.cantidadTotal }}</span></button>
+      <button class="cart-button" type="button" (click)="alternarCarrito()" aria-controls="cart-drawer" [attr.aria-expanded]="carritoAbierto">Carrito <span>{{ carrito.cantidadTotal }}</span></button>
       <button class="outline-button" type="button" (click)="cerrarSesion()">Salir</button>
       <span class="user-mark">U</span>
     </div>
@@ -117,72 +117,18 @@
     </div>
     <div class="lookbook-grid">
       <div class="lookbook-card tall">
-        <img src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=80" alt="Prenda elegante" />
+        <img src="assets/images/products/polos/polo-basico-negro.jpg" alt="Prenda elegante" />
       </div>
       <div class="lookbook-card">
-        <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80" alt="Vestido de moda" />
+        <img src="assets/images/products/vestidos/vestido-casual-rojo.jpg" alt="Vestido de moda" />
       </div>
       <div class="lookbook-card">
-        <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=900&q=80" alt="Conjunto casual" />
+        <img src="assets/images/products/blusas/blusa-basica-blanca.jpg" alt="Conjunto casual" />
       </div>
     </div>
   </section>
 
-  <aside class="cart-drawer" *ngIf="carritoAbierto">
-    <div class="cart-heading">
-      <div>
-        <p class="eyebrow">TU SELECCIÓN</p>
-        <h2>Carrito de compra</h2>
-      </div>
-      <button type="button" class="close-cart" (click)="alternarCarrito()" aria-label="Cerrar carrito">×</button>
-    </div>
-    <p class="empty" *ngIf="!carrito.items.length">Tu carrito está vacío.</p>
-    <div class="cart-line" *ngFor="let item of carrito.items">
-      <img [src]="imagen(item.producto)" [alt]="item.producto.nombre" />
-      <div>
-        <strong>{{ item.producto.nombre }}</strong>
-          <small>{{ item.variante.color }} / {{ item.variante.talla }} · {{ item.variante.precio | currency:'PEN':'symbol':'1.2-2' }}</small>
-        <div class="stepper">
-          <button type="button" (click)="carrito.reducir(item.variante.id)">−</button>
-          <span>{{ item.cantidad }}</span>
-          <button type="button" (click)="carrito.agregar(item.producto, item.variante)">+</button>
-        </div>
-      </div>
-      <button type="button" class="remove" (click)="carrito.quitar(item.variante.id)" aria-label="Quitar">×</button>
-    </div>
-    <div class="cart-total" *ngIf="carrito.items.length">
-      <span>Total</span>
-      <strong>{{ carrito.total | currency:'PEN':'symbol':'1.2-2' }}</strong>
-    </div>
-
-    <div class="checkout-form" *ngIf="carrito.items.length">
-      <div class="checkout-summary">
-        <span>Subtotal</span>
-        <strong>{{ carrito.total | currency:'PEN':'symbol':'1.2-2' }}</strong>
-      </div>
-      <label>
-        Cliente
-        <input type="text" [(ngModel)]="nombreCliente" placeholder="Tu nombre" />
-      </label>
-      <label>
-        Dirección de entrega
-        <input type="text" [(ngModel)]="direccionEnvio" placeholder="Av. principal 123" />
-      </label>
-      <label>
-        Método de pago
-        <select [(ngModel)]="metodoPago">
-          <option value="Efectivo">Efectivo</option>
-          <option value="Tarjeta">Tarjeta</option>
-          <option value="Yape/Plin">Yape/Plin</option>
-        </select>
-      </label>
-      <p class="pedido-error" *ngIf="errorPedido">{{ errorPedido }}</p>
-      <p class="pedido-ok" *ngIf="mensajePedido">{{ mensajePedido }}</p>
-      <button class="checkout" type="button" [disabled]="!carrito.items.length || procesandoPedido" (click)="confirmarCompra()">
-        {{ procesandoPedido ? 'Procesando...' : 'Confirmar pedido' }} <span>↗</span>
-      </button>
-    </div>
-  </aside>
+  <app-carrito-drawer [abierto]="carritoAbierto" (cerrado)="cerrarCarrito()"></app-carrito-drawer>
 
   <section class="values">
     <article>
