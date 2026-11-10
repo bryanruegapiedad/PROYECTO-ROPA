@@ -29,6 +29,10 @@ export class Tienda {
   productoSeleccionado: Producto | null = null;
   varianteSeleccionada: VarianteProducto | null = null;
 
+  get esAdmin(): boolean {
+    return this.auth.esAdmin();
+  }
+
   constructor() {
     this.productosService.listar().subscribe({
       next: productos => {

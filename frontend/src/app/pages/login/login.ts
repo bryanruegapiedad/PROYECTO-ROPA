@@ -42,7 +42,13 @@ export class Login {
       timeout({ each: 5000 }),
       finalize(() => this.cargando = false),
     ).subscribe({
-      next: () => this.router.navigate(['/tienda']),
+      next: (res) => {
+        if (res.rol === 'admin' || this.auth.esAdmin()) {
+          this.router.navigate(['/dashboard']);
+        } else {
+          this.router.navigate(['/tienda']);
+        }
+      },
       error: (response) => {
         this.error = this.mensajeError(response, 'No se pudo iniciar sesión. Revisa tus datos e inténtalo de nuevo.');
       },

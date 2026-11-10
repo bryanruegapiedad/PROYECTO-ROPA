@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Pedido, RotacionProducto } from '../models/pedido';
+import { MetricasDashboard, Pedido, RotacionProducto } from '../models/pedido';
 
 @Injectable({ providedIn: 'root' })
 export class PedidoService {
@@ -10,6 +10,14 @@ export class PedidoService {
 
   listar(): Observable<Pedido[]> {
     return this.http.get<Pedido[]>(`${this.api}/pedidos`);
+  }
+
+  metricas(): Observable<MetricasDashboard> {
+    return this.http.get<MetricasDashboard>(`${this.api}/pedidos/metricas`);
+  }
+
+  actualizarEstado(idPedido: number, estado: string): Observable<{ ok: boolean; pedido: Pedido }> {
+    return this.http.patch<{ ok: boolean; pedido: Pedido }>(`${this.api}/pedidos/${idPedido}/estado`, { estado });
   }
 
   rotacion(): Observable<RotacionProducto[]> {

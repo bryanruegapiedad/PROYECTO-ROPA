@@ -71,6 +71,10 @@ export class AuthService {
     return localStorage.getItem('inventario_rol');
   }
 
+  esAdmin(): boolean {
+    return this.rol() === 'admin';
+  }
+
   usuarioActual(): string {
     return localStorage.getItem('inventario_usuario') || 'Cliente';
   }

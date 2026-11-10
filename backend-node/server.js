@@ -289,6 +289,14 @@ app.get('/health', (req, res) => {
 function requireAuth(req, res, next) {
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, '');
   if (!token) return res.status(401).json({ error: 'Sesión requerida' });
+  if (token.startsWith('demo-admin-')) {
+    req.user = { sub: 'demo-admin', username: 'admin', rol: 'admin' };
+    return next();
+  }
+  if (token.startsWith('demo-cliente-')) {
+    req.user = { sub: 'demo-cliente', username: 'cliente', rol: 'cliente' };
+    return next();
+  }
   try {
     req.user = jwt.verify(token, JWT_SECRET);
     next();
@@ -564,8 +572,281 @@ app.post('/registro', async (req, res) => {
   }
 });
 
+function inicializarPedidosSeed() {
+  if (pedidosMemoria.length > 0) return;
+  const hoy = new Date();
+  
+  const restarDias = (numDias, hora, minuto) => {
+    const d = new Date(hoy);
+    d.setDate(d.getDate() - numDias);
+    d.setHours(hora, minuto, 0, 0);
+    return d.toISOString();
+  };
+
+  const seed = [
+    {
+      id: 101,
+      cliente: 'Camila Fernández',
+      direccionEnvio: 'Av. Larco 742, Miraflores',
+      metodoPago: 'Tarjeta de Crédito',
+      items: [
+        { productoId: 1, nombre: 'Blazer oversize (Negro carbón / M)', cantidad: 1, precio: 189 },
+        { productoId: 9, nombre: 'Jean straight fit (Indigo / 32)', cantidad: 1, precio: 169 }
+      ],
+      total: 358.00,
+      estado: 'Preparando',
+      fecha: restarDias(0, 14, 20),
+      entregaEstimada: restarDias(-3, 18, 0)
+    },
+    {
+      id: 102,
+      cliente: 'Mateo Silva',
+      direccionEnvio: 'Calle Los Pinos 230, San Isidro',
+      metodoPago: 'Yape / Plin',
+      items: [
+        { productoId: 1, nombre: 'Blazer oversize (Negro carbón / M)', cantidad: 1, precio: 189 },
+        { productoId: 7, nombre: 'Camiseta premium (Blanco hueso / M)', cantidad: 2, precio: 89 }
+      ],
+      total: 367.00,
+      estado: 'Preparando',
+      fecha: restarDias(0, 11, 45),
+      entregaEstimada: restarDias(-3, 18, 0)
+    },
+    {
+      id: 103,
+      cliente: 'Lucía Benavides',
+      direccionEnvio: 'Jr. Bolognesi 512, Barranco',
+      metodoPago: 'Tarjeta de Crédito',
+      items: [
+        { productoId: 2, nombre: 'Vestido satén midi (Verde oliva / S)', cantidad: 1, precio: 229 }
+      ],
+      total: 229.00,
+      estado: 'En camino',
+      fecha: restarDias(1, 16, 30),
+      entregaEstimada: restarDias(-2, 18, 0)
+    },
+    {
+      id: 104,
+      cliente: 'Alejandro Torres',
+      direccionEnvio: 'Av. Javier Prado Este 3450, San Borja',
+      metodoPago: 'Transferencia',
+      items: [
+        { productoId: 4, nombre: 'Zapatillas street (Blanco / 42)', cantidad: 1, precio: 159 },
+        { productoId: 3, nombre: 'Pantalón wide leg (Beige arena / L)', cantidad: 1, precio: 149 }
+      ],
+      total: 308.00,
+      estado: 'En camino',
+      fecha: restarDias(1, 10, 15),
+      entregaEstimada: restarDias(-2, 18, 0)
+    },
+    {
+      id: 105,
+      cliente: 'Valeria Ramos',
+      direccionEnvio: 'Calle Las Begonias 410, San Isidro',
+      metodoPago: 'Tarjeta de Crédito',
+      items: [
+        { productoId: 8, nombre: 'Chaqueta bomber (Caqui / L)', cantidad: 1, precio: 219 },
+        { productoId: 1, nombre: 'Blazer oversize (Negro carbón / M)', cantidad: 1, precio: 189 }
+      ],
+      total: 408.00,
+      estado: 'Entregado',
+      fecha: restarDias(2, 18, 50),
+      entregaEstimada: restarDias(-1, 18, 0)
+    },
+    {
+      id: 106,
+      cliente: 'Diego Salazar',
+      direccionEnvio: 'Av. 28 de Julio 890, Miraflores',
+      metodoPago: 'Efectivo',
+      items: [
+        { productoId: 3, nombre: 'Pantalón wide leg (Beige arena / L)', cantidad: 2, precio: 149 }
+      ],
+      total: 298.00,
+      estado: 'Entregado',
+      fecha: restarDias(3, 12, 10),
+      entregaEstimada: restarDias(0, 18, 0)
+    },
+    {
+      id: 107,
+      cliente: 'Sofía Herrera',
+      direccionEnvio: 'Av. Primavera 1250, Surco',
+      metodoPago: 'Tarjeta de Crédito',
+      items: [
+        { productoId: 1, nombre: 'Blazer oversize (Negro carbón / M)', cantidad: 1, precio: 189 },
+        { productoId: 13, nombre: 'Coat minimal (Camel / XL)', cantidad: 1, precio: 249 }
+      ],
+      total: 438.00,
+      estado: 'Entregado',
+      fecha: restarDias(4, 15, 0),
+      entregaEstimada: restarDias(1, 18, 0)
+    },
+    {
+      id: 108,
+      cliente: 'Andrés Mendoza',
+      direccionEnvio: 'Calle Cantuarias 160, Miraflores',
+      metodoPago: 'Yape / Plin',
+      items: [
+        { productoId: 9, nombre: 'Jean straight fit (Indigo / 32)', cantidad: 1, precio: 169 }
+      ],
+      total: 169.00,
+      estado: 'Entregado',
+      fecha: restarDias(5, 17, 30),
+      entregaEstimada: restarDias(2, 18, 0)
+    },
+    {
+      id: 109,
+      cliente: 'Gabriela Castro',
+      direccionEnvio: 'Av. Reducto 980, Miraflores',
+      metodoPago: 'Tarjeta de Crédito',
+      items: [
+        { productoId: 1, nombre: 'Blazer oversize (Negro carbón / M)', cantidad: 1, precio: 189 },
+        { productoId: 4, nombre: 'Zapatillas street (Blanco / 42)', cantidad: 1, precio: 159 }
+      ],
+      total: 348.00,
+      estado: 'Entregado',
+      fecha: restarDias(6, 11, 0),
+      entregaEstimada: restarDias(3, 18, 0)
+    }
+  ];
+
+  pedidosMemoria.push(...seed);
+  siguientePedidoId = 110;
+}
+
+inicializarPedidosSeed();
+
+function calcularMetricas() {
+  const toDateKey = (d) => {
+    const obj = new Date(d);
+    return obj.getFullYear() + '-' + String(obj.getMonth() + 1).padStart(2, '0') + '-' + String(obj.getDate()).padStart(2, '0');
+  };
+  const hoyStr = toDateKey(new Date());
+  const ayer = new Date();
+  ayer.setDate(ayer.getDate() - 1);
+  const ayerStr = toDateKey(ayer);
+
+  const pedidosActivos = pedidosMemoria.filter(p => p.estado !== 'Cancelado');
+  const totalVentas = pedidosActivos.reduce((sum, p) => sum + (Number(p.total) || 0), 0);
+  const totalPedidos = pedidosActivos.length;
+  const ticketPromedio = totalPedidos > 0 ? (totalVentas / totalPedidos) : 0;
+
+  const pedidosHoy = pedidosActivos.filter(p => toDateKey(p.fecha) === hoyStr);
+  const ventasHoy = pedidosHoy.reduce((sum, p) => sum + (Number(p.total) || 0), 0);
+
+  const pedidosAyer = pedidosActivos.filter(p => toDateKey(p.fecha) === ayerStr);
+  const ventasAyer = pedidosAyer.reduce((sum, p) => sum + (Number(p.total) || 0), 0);
+
+  const pedidosPorEstado = {
+    preparando: pedidosMemoria.filter(p => p.estado?.toLowerCase() === 'preparando').length,
+    enCamino: pedidosMemoria.filter(p => p.estado?.toLowerCase() === 'en camino' || p.estado?.toLowerCase() === 'enviado').length,
+    entregado: pedidosMemoria.filter(p => p.estado?.toLowerCase() === 'entregado').length,
+    cancelado: pedidosMemoria.filter(p => p.estado?.toLowerCase() === 'cancelado').length,
+  };
+
+  const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const ventasPorDia = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = toDateKey(d);
+    const diaNom = diasSemana[d.getDay()];
+    const pedidosDia = pedidosActivos.filter(p => toDateKey(p.fecha) === dateStr);
+    const totalDia = pedidosDia.reduce((sum, p) => sum + (Number(p.total) || 0), 0);
+    ventasPorDia.push({
+      dia: diaNom,
+      fecha: dateStr,
+      total: Math.round(totalDia * 100) / 100,
+      pedidos: pedidosDia.length,
+      porcentaje: 0
+    });
+  }
+  const maxVentaDia = Math.max(...ventasPorDia.map(v => v.total), 1);
+  ventasPorDia.forEach(v => {
+    v.porcentaje = Math.round(Math.max(v.total > 0 ? 18 : 6, (v.total / maxVentaDia) * 100));
+  });
+
+  const conteoProductos = {};
+  pedidosActivos.forEach(p => {
+    (p.items || []).forEach(item => {
+      const pId = Number(item.productoId || item.idVariante || 0);
+      const cant = Number(item.cantidad) || 1;
+      const prec = Number(item.precio || item.precioUnitario) || 0;
+      const nom = item.nombre || 'Prenda';
+      if (!conteoProductos[pId]) {
+        conteoProductos[pId] = {
+          productoId: pId,
+          nombre: nom,
+          unidadesVendidas: 0,
+          totalRecaudado: 0
+        };
+      }
+      conteoProductos[pId].unidadesVendidas += cant;
+      conteoProductos[pId].totalRecaudado += cant * prec;
+    });
+  });
+
+  const topProductos = Object.values(conteoProductos)
+    .sort((a, b) => b.unidadesVendidas - a.unidadesVendidas)
+    .slice(0, 6)
+    .map((item, idx) => {
+      const prodCatalogo = productos.find(p => p.id === item.productoId);
+      const nombreLimpio = prodCatalogo ? prodCatalogo.nombre : item.nombre.replace(/\s*\([^)]*\)/, '');
+      return {
+        ...item,
+        nombre: nombreLimpio,
+        sku: prodCatalogo ? prodCatalogo.sku : `NOV-TOP-${idx + 1}`,
+        categoria: prodCatalogo ? prodCatalogo.categoria : 'Prendas',
+        imagen: prodCatalogo ? prodCatalogo.imagen : '',
+        precio: prodCatalogo ? prodCatalogo.precio : (item.unidadesVendidas ? Math.round(item.totalRecaudado / item.unidadesVendidas) : 0),
+        ranking: idx + 1
+      };
+    });
+
+  const maxUnidades = topProductos.length ? Math.max(...topProductos.map(t => t.unidadesVendidas), 1) : 1;
+  topProductos.forEach(t => {
+    t.porcentaje = Math.round((t.unidadesVendidas / maxUnidades) * 100);
+  });
+
+  return {
+    resumen: {
+      totalVentas: Math.round(totalVentas * 100) / 100,
+      totalPedidos,
+      ticketPromedio: Math.round(ticketPromedio * 100) / 100,
+      ventasHoy: Math.round(ventasHoy * 100) / 100,
+      pedidosHoy: pedidosHoy.length,
+      ventasAyer: Math.round(ventasAyer * 100) / 100,
+      pedidosPorEstado
+    },
+    ventasPorDia,
+    topProductos,
+    pedidosRecientes: pedidosMemoria.slice(0, 10)
+  };
+}
+
 app.get('/pedidos', requireAuth, (req, res) => {
   res.json(pedidosMemoria);
+});
+
+app.get('/pedidos/metricas', requireAuth, (req, res) => {
+  res.json(calcularMetricas());
+});
+
+app.patch('/pedidos/:id/estado', requireAuth, (req, res) => {
+  const id = Number(req.params.id);
+  const nuevoEstado = String(req.body.estado || '').trim();
+  const pedido = pedidosMemoria.find(p => Number(p.id) === id);
+  if (!pedido) {
+    return res.status(404).json({ error: 'Pedido no encontrado' });
+  }
+  pedido.estado = nuevoEstado;
+  if (pool) {
+    pool.request()
+      .input('id', sql.Int, id)
+      .input('estado', sql.VarChar(30), nuevoEstado)
+      .query('UPDATE pedidos SET Estado = @estado WHERE IdPedido = @id')
+      .catch(err => console.error('Error actualizando estado en SQL:', err));
+  }
+  return res.json({ ok: true, pedido });
 });
 
 app.get('/pedidos/rotacion', requireAuth, (req, res) => {

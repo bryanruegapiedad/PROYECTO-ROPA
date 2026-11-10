@@ -5,11 +5,15 @@
       <a class="active" routerLink="/tienda">Colección</a>
       <a routerLink="/tienda/categoria/mujeres">Categorías</a>
       <a routerLink="/tienda/novedades">Novedades</a>
+      <a *ngIf="esAdmin" class="admin-nav-pill" routerLink="/dashboard" title="Ver métricas de compras y rotación">📊 Métricas Admin</a>
     </nav>
     <div class="header-actions">
+      <a *ngIf="esAdmin" class="admin-panel-badge" routerLink="/dashboard" title="Acceder al Panel Administrativo">
+        <span class="admin-badge-dot"></span> Panel Admin
+      </a>
       <button class="cart-button" type="button" (click)="alternarCarrito()" aria-controls="cart-drawer" [attr.aria-expanded]="carritoAbierto">Carrito <span>{{ carrito.cantidadTotal }}</span></button>
       <button class="outline-button" type="button" (click)="cerrarSesion()">Salir</button>
-      <span class="user-mark">U</span>
+      <span class="user-mark" [class.admin-mark]="esAdmin" [title]="esAdmin ? 'Administrador' : 'Cliente'">{{ esAdmin ? 'AD' : 'U' }}</span>
     </div>
   </header>
 

@@ -26,6 +26,10 @@ export class Novedades implements OnInit {
   cargando = true;
   carritoAbierto = false;
 
+  get esAdmin(): boolean {
+    return this.auth.esAdmin();
+  }
+
   ngOnInit(): void {
     this.cargarNovedades();
   }

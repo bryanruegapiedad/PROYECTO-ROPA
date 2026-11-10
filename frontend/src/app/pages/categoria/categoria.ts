@@ -28,6 +28,10 @@ export class Categoria implements OnInit {
   cargando = true;
   carritoAbierto = false;
 
+  get esAdmin(): boolean {
+    return this.auth.esAdmin();
+  }
+
   ngOnInit(): void {
     this.route.paramMap.subscribe(params => {
       const catParam = params.get('categoria') || 'mujeres';

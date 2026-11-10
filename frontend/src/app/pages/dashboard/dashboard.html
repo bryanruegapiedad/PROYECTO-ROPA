@@ -1,4 +1,10 @@
 <div class="layout">
+  <!-- Toast flotante de confirmación -->
+  <div class="toast-floating" *ngIf="mensajeToast">
+    <span>✓</span> {{ mensajeToast }}
+  </div>
+
+  <!-- Sidebar Lateral -->
   <aside class="sidebar">
     <div class="brand">
       <span class="brand-mark">N</span>
@@ -8,153 +14,322 @@
       </div>
     </div>
 
-    <p class="menu-label">GESTIÓN</p>
+    <p class="menu-label">PANEL DE CONTROL</p>
     <nav>
-      <button class="active" type="button"><span>▦</span>Resumen</button>
+      <button class="active" type="button"><span>▦</span>Resumen & Métricas</button>
       <button type="button" (click)="irProductos()"><span>◇</span>Catálogo</button>
       <button type="button" (click)="irPedidos()"><span>◌</span>Pedidos</button>
-      <button type="button"><span>♧</span>Clientes</button>
+      <button type="button" class="btn-store-nav" (click)="irTienda()"><span>🛍</span>Ir a Tienda</button>
     </nav>
 
-    <p class="menu-label secondary">ANÁLISIS</p>
+    <p class="menu-label secondary">ACCESOS DIRECTOS</p>
     <nav>
-      <button type="button"><span>↗</span>Ventas</button>
-      <button type="button"><span>◫</span>Reportes</button>
+      <button type="button" (click)="cargarTodo()"><span>↻</span>Sincronizar</button>
+      <button type="button" (click)="cerrarSesion()"><span>✕</span>Cerrar Sesión</button>
     </nav>
 
     <div class="sidebar-footer">
       <span class="status-dot"></span>
-      <span>Todos los sistemas<br><small>operativos</small></span>
+      <div>
+        <strong>Rol: Administrador</strong>
+        <small>Sistema de ventas activo</small>
+      </div>
     </div>
   </aside>
 
+  <!-- Contenido Principal -->
   <main class="contenido">
+    <!-- Topbar Superior -->
     <header class="topbar">
       <div>
-        <p class="overline">MARTES, 08 SEPTIEMBRE 2026</p>
-        <h1>Buenos días, Admin <span>✦</span></h1>
-        <p class="subtitle">Esto es lo que está pasando en tu boutique hoy.</p>
+        <p class="overline">{{ fechaActual | date:'EEEE, dd MMMM yyyy':'':'es-PE' | uppercase }}</p>
+        <h1>Panel de Administración <span>✦</span></h1>
+        <p class="subtitle">Métricas comerciales en tiempo real · Compras diarias, rotación de catálogo y ventas.</p>
       </div>
       <div class="top-actions">
-        <button class="icon-button" type="button">⌕</button>
-        <button class="icon-button" type="button">♧<i></i></button>
-        <div class="avatar">AD</div>
+        <button class="btn-pill-store" type="button" (click)="irTienda()" title="Ver la experiencia de tienda de clientes">
+          <span>🛍</span> Ver Tienda
+        </button>
+        <button class="btn-refresh" type="button" (click)="cargarTodo()" title="Actualizar métricas">
+          ↻
+        </button>
+        <div class="avatar" title="Administrador de Sistema">AD</div>
       </div>
     </header>
 
+    <!-- Banner Hero Ejecutivo -->
     <section class="hero">
-      <div>
-        <p class="overline">COLECCIÓN OTOÑO / INVIERNO</p>
-        <h2>El estilo empieza<br>con una <em>buena elección.</em></h2>
-        <button class="hero-action" type="button" (click)="irProductos()">Ver catálogo <span>→</span></button>
+      <div class="hero-left">
+        <p class="overline">RESUMEN EJECUTIVO · TIENDA NOVA</p>
+        <h2>Control total de ventas<br>y <em>rotación de inventario.</em></h2>
+        <div class="hero-stats-row">
+          <div class="hero-chip">
+            <small>Ventas de hoy</small>
+            <strong>{{ ventasHoy | currency:'PEN':'symbol':'1.2-2' }}</strong>
+          </div>
+          <div class="hero-chip">
+            <small>Ticket promedio</small>
+            <strong>{{ ticketPromedio | currency:'PEN':'symbol':'1.2-2' }}</strong>
+          </div>
+          <button class="hero-action" type="button" (click)="irPedidos()">Ver todos los pedidos <span>→</span></button>
+        </div>
       </div>
       <div class="hero-shape"><span>✦</span></div>
     </section>
 
+    <!-- Indicador de Carga -->
+    <div class="loading-bar-wrap" *ngIf="cargando">
+      <div class="loading-bar"></div>
+      <p>Calculando métricas y ventas en tiempo real...</p>
+    </div>
+
+    <!-- Sección Heading Métricas -->
     <section class="section-heading">
       <div>
-        <p class="overline">VISTA GENERAL</p>
-        <h2>Resumen de inventario</h2>
+        <p class="overline">FINANZAS & OPERACIONES</p>
+        <h2>Métricas de Ventas y Rendimiento</h2>
       </div>
-      <button class="date-filter" type="button">Últimos 30 días ⌄</button>
+      <div class="heading-badge">
+        <span class="live-dot"></span> Datos en vivo
+      </div>
     </section>
 
+    <!-- 4 Cards de Métricas Principales -->
     <section class="cards">
       <article class="stat-card">
-        <div class="stat-icon lavender">▦</div>
-        <p>PRODUCTOS ACTIVOS</p>
-        <strong>{{ productos.length }}</strong>
-        <span class="trend up">↗ Catálogo actualizado</span>
+        <div class="stat-header">
+          <div class="stat-icon mint">S/</div>
+          <span class="trend up">↗ Global</span>
+        </div>
+        <p>VENTAS TOTALES</p>
+        <strong>{{ totalVentas | currency:'PEN':'symbol':'1.2-2' }}</strong>
+        <span class="stat-sub">Ingresos acumulados de pedidos</span>
       </article>
+
       <article class="stat-card">
-        <div class="stat-icon peach">◒</div>
-        <p>UNIDADES EN STOCK</p>
-        <strong>{{ totalStock }}</strong>
-        <span class="trend up">↗ Inventario disponible</span>
+        <div class="stat-header">
+          <div class="stat-icon lavender">📅</div>
+          <span class="trend up" [class.neutral]="ventasHoy === 0">{{ pedidosHoy }} pedidos hoy</span>
+        </div>
+        <p>VENTAS DEL DÍA (HOY)</p>
+        <strong>{{ ventasHoy | currency:'PEN':'symbol':'1.2-2' }}</strong>
+        <span class="stat-sub">Operación del día en curso</span>
       </article>
+
       <article class="stat-card">
-        <div class="stat-icon mint">$</div>
-        <p>VALOR DEL INVENTARIO</p>
-        <strong>{{ valorInventario | currency:'PEN':'symbol':'1.0-0' }}</strong>
-        <span class="trend neutral">Valor estimado actual</span>
+        <div class="stat-header">
+          <div class="stat-icon peach">📦</div>
+          <span class="trend neutral">{{ metricas?.resumen?.pedidosPorEstado?.entregado || 0 }} entregados</span>
+        </div>
+        <p>PEDIDOS REALIZADOS</p>
+        <strong>{{ totalPedidos }} órdenes</strong>
+        <span class="stat-sub">{{ metricas?.resumen?.pedidosPorEstado?.preparando || 0 }} en preparación</span>
       </article>
+
       <article class="stat-card">
-        <div class="stat-icon rose">!</div>
-        <p>STOCK POR REVISAR</p>
-        <strong>{{ stockBajo }}</strong>
-        <span class="trend down">Requieren atención</span>
+        <div class="stat-header">
+          <div class="stat-icon rose">🎯</div>
+          <span class="trend up">Ticket medio</span>
+        </div>
+        <p>GASTO PROMEDIO POR COMPRA</p>
+        <strong>{{ ticketPromedio | currency:'PEN':'symbol':'1.2-2' }}</strong>
+        <span class="stat-sub">Valor promedio por transacción</span>
       </article>
     </section>
 
+    <!-- Grid Central: Lo más TOP y Compras Diarias -->
     <section class="lower-grid">
-      <article class="panel">
+      <!-- Panel 1: Lo más TOP (Prendas Más Vendidas) -->
+      <article class="panel top-sales-panel">
         <div class="panel-heading">
           <div>
-            <p class="overline">INVENTARIO</p>
-            <h3>Productos recientes</h3>
+            <p class="overline">RANKING DE VENTAS</p>
+            <h3>Prendas Más Vendidas (Lo más TOP)</h3>
           </div>
-          <button class="text-action" type="button" (click)="irProductos()">Ver catálogo →</button>
+          <span class="pill-badge">🔥 Best Sellers</span>
         </div>
+        <p class="panel-desc">Prendas con mayor rotación e ingresos generados según los pedidos confirmados.</p>
 
-        <div class="product-list" *ngIf="!cargando; else loading">
-          <div class="product-row" *ngFor="let producto of productos | slice:0:4">
-            <div class="product-thumb" [style.background-image]="'url(' + imagenProducto(producto) + ')'" aria-label="Imagen de producto"></div>
-            <div class="product-info">
-              <strong>{{ producto.nombre }}</strong>
-              <small>{{ producto.sku }} · {{ producto.color }}</small>
+        <div class="top-list" *ngIf="topProductos.length; else noTop">
+          <div class="top-row" *ngFor="let item of topProductos">
+            <div class="top-rank" [class.gold]="item.ranking === 1" [class.silver]="item.ranking === 2" [class.bronze]="item.ranking === 3">
+              #{{ item.ranking }}
             </div>
-            <span class="category">{{ producto.categoria }}</span>
-            <strong class="price">{{ producto.precio | currency:'PEN':'symbol':'1.2-2' }}</strong>
-            <span class="stock" [class.low]="producto.stock < 10">{{ producto.stock }} uds.</span>
+
+            <div class="top-thumb" [style.background-image]="'url(' + imagenProducto(item) + ')'"></div>
+
+            <div class="top-details">
+              <div class="top-title-row">
+                <strong>{{ item.nombre }}</strong>
+                <span class="top-price">{{ item.precio | currency:'PEN':'symbol':'1.2-2' }}</span>
+              </div>
+              <small class="top-sub">{{ item.categoria }} · {{ item.sku }}</small>
+
+              <!-- Barra de rotación -->
+              <div class="progress-wrap">
+                <div class="progress-bar">
+                  <i [style.width.%]="item.porcentaje"></i>
+                </div>
+                <span class="progress-label">{{ item.unidadesVendidas }} unidades vendidas</span>
+              </div>
+            </div>
+
+            <div class="top-revenue">
+              <small>Recaudado</small>
+              <strong>{{ item.totalRecaudado | currency:'PEN':'symbol':'1.0-0' }}</strong>
+            </div>
           </div>
         </div>
 
-        <ng-template #loading>
-          <p class="empty">Cargando inventario...</p>
+        <ng-template #noTop>
+          <div class="empty-state">
+            <p>Todavía no hay ventas registradas para calcular las prendas top.</p>
+          </div>
         </ng-template>
-
-        <p class="empty" *ngIf="!cargando && !productos.length">No hay productos registrados.</p>
       </article>
 
-      <article class="panel performance">
+      <!-- Panel 2: Métricas de Compras Diarias (Gráfico Semanal) -->
+      <article class="panel chart-panel">
         <div class="panel-heading">
           <div>
-            <p class="overline">RENDIMIENTO</p>
-            <h3>Actividad de ventas</h3>
+            <p class="overline">EVOLUCIÓN DIARIA</p>
+            <h3>Compras de la Semana</h3>
           </div>
-          <span class="pill">+12.8% ↗</span>
+          <span class="pill-badge">7 Últimos Días</span>
+        </div>
+        <p class="panel-desc">Distribución de compras diarias en soles y cantidad de pedidos.</p>
+
+        <!-- Gráfico de Barras Diarias -->
+        <div class="daily-chart-wrap" *ngIf="ventasPorDia.length; else noChart">
+          <div class="bars-container">
+            <div class="bar-col" *ngFor="let dia of ventasPorDia">
+              <!-- Etiqueta sobre la barra -->
+              <div class="bar-label-top" [class.has-sales]="dia.total > 0">
+                <span class="bar-amount">{{ dia.total | currency:'PEN':'symbol':'1.0-0' }}</span>
+                <span class="bar-orders">{{ dia.pedidos }} ped.</span>
+              </div>
+
+              <!-- Barra visual -->
+              <div class="bar-track">
+                <div class="bar-fill" [style.height.%]="dia.porcentaje" [class.highlight]="dia.total > 0"></div>
+              </div>
+
+              <!-- Día de la semana -->
+              <div class="bar-day">{{ dia.dia }}</div>
+              <div class="bar-date">{{ dia.fecha | slice:5:10 }}</div>
+            </div>
+          </div>
+
+          <div class="chart-summary-foot">
+            <div class="foot-stat">
+              <small>Total 7 días</small>
+              <strong>{{ totalVentas | currency:'PEN':'symbol':'1.0-0' }}</strong>
+            </div>
+            <div class="foot-stat">
+              <small>Promedio diario</small>
+              <strong>{{ (totalVentas / 7) | currency:'PEN':'symbol':'1.0-0' }} / día</strong>
+            </div>
+          </div>
         </div>
 
-        <div class="chart">
-          <div class="chart-values">
-            <span>S/ 8k</span>
-            <span>S/ 6k</span>
-            <span>S/ 4k</span>
-            <span>S/ 2k</span>
-            <span>S/ 0</span>
+        <ng-template #noChart>
+          <div class="empty-state">
+            <p>No hay datos de ventas diarias disponibles.</p>
           </div>
-          <div class="bars">
-            <i style="height:35%"></i>
-            <i style="height:52%"></i>
-            <i style="height:42%"></i>
-            <i style="height:68%"></i>
-            <i style="height:58%"></i>
-            <i style="height:82%"></i>
-            <i style="height:74%"></i>
-            <i style="height:92%"></i>
-          </div>
-        </div>
-
-        <div class="days">
-          <span>Lun</span>
-          <span>Mar</span>
-          <span>Mié</span>
-          <span>Jue</span>
-          <span>Vie</span>
-          <span>Sáb</span>
-          <span>Dom</span>
-        </div>
+        </ng-template>
       </article>
+    </section>
+
+    <!-- Sección de Pedidos Recientes y Gestión de Estados -->
+    <section class="panel orders-section">
+      <div class="panel-heading">
+        <div>
+          <p class="overline">SEGUIMIENTO EN VIVO</p>
+          <h3>Últimas Compras Realizadas</h3>
+        </div>
+        <button class="btn-action-small" type="button" (click)="irPedidos()">Ver todos los pedidos →</button>
+      </div>
+
+      <div class="orders-table-wrap" *ngIf="pedidosRecientes.length; else noOrders">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>CLIENTE</th>
+              <th>FECHA & HORA</th>
+              <th>PRENDAS</th>
+              <th>TOTAL</th>
+              <th>ESTADO ACTUAL</th>
+              <th>GESTIONAR ESTADO</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of pedidosRecientes">
+              <td class="col-id"><strong>#{{ p.id }}</strong></td>
+              <td class="col-cliente">
+                <strong>{{ p.cliente }}</strong>
+                <small *ngIf="p.direccionEnvio">{{ p.direccionEnvio }}</small>
+              </td>
+              <td class="col-fecha">{{ formatoFecha(p.fecha) }}</td>
+              <td class="col-items">
+                <span class="badge-count">{{ p.items.length || 1 }} artículo(s)</span>
+                <small class="items-names" *ngIf="p.items.length">
+                  {{ p.items[0]?.nombre }}<span *ngIf="p.items.length > 1"> +{{ p.items.length - 1 }} más</span>
+                </small>
+              </td>
+              <td class="col-total">
+                <strong>{{ p.total | currency:'PEN':'symbol':'1.2-2' }}</strong>
+              </td>
+              <td class="col-estado">
+                <span class="status-pill" [ngClass]="p.estado.toLowerCase() || 'preparando'">
+                  {{ p.estado }}
+                </span>
+              </td>
+              <td class="col-actions">
+                <div class="status-actions">
+                  <button 
+                    *ngIf="p.estado !== 'Entregado'" 
+                    class="btn-status-step" 
+                    type="button" 
+                    [disabled]="guardandoEstadoId === p.id"
+                    (click)="cambiarEstado(p, p.estado === 'Preparando' ? 'En camino' : 'Entregado')">
+                    {{ p.estado === 'Preparando' ? 'Marcar En camino →' : 'Marcar Entregado ✓' }}
+                  </button>
+                  <span class="completed-check" *ngIf="p.estado === 'Entregado'">
+                    ✓ Completado
+                  </span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ng-template #noOrders>
+        <div class="empty-state">
+          <p>Aún no hay compras registradas en el sistema.</p>
+        </div>
+      </ng-template>
+    </section>
+
+    <!-- Resumen de Inventario (Stats complementarios de stock) -->
+    <section class="inventory-summary-row">
+      <div class="inv-card">
+        <small>Productos en Catálogo</small>
+        <strong>{{ productos.length }} modelos</strong>
+      </div>
+      <div class="inv-card">
+        <small>Unidades en Almacén</small>
+        <strong>{{ totalStock }} prendas</strong>
+      </div>
+      <div class="inv-card">
+        <small>Valor de Inventario</small>
+        <strong>{{ valorInventario | currency:'PEN':'symbol':'1.0-0' }}</strong>
+      </div>
+      <div class="inv-card" [class.warning]="stockBajo > 0">
+        <small>Stock Crítico (&lt; 10 uds.)</small>
+        <strong>{{ stockBajo }} prendas</strong>
+      </div>
     </section>
   </main>
 </div>

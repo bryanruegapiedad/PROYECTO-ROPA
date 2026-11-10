@@ -139,6 +139,64 @@
   width: 30px;
 }
 
+.admin-nav-pill {
+  color: #a8582f !important;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(168, 88, 47, 0.08);
+  padding: 4px 10px;
+  border-radius: 999px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(168, 88, 47, 0.16);
+    color: #8c421d !important;
+    transform: translateY(-1px);
+  }
+}
+
+.admin-panel-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #24221f, #151311);
+  color: #f7e6d0 !important;
+  border: 1px solid rgba(219, 168, 138, 0.4);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 7px 14px;
+  text-decoration: none;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: linear-gradient(135deg, #322f2b, #1e1b18);
+    border-color: rgba(219, 168, 138, 0.8);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(219, 168, 138, 0.2);
+  }
+}
+
+.admin-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #dba88a;
+  box-shadow: 0 0 6px #dba88a;
+}
+
+.admin-mark {
+  background: linear-gradient(135deg, #e6d8b5, #dba88a) !important;
+  color: #17120f !important;
+  font-weight: 800 !important;
+  border: 1px solid rgba(219, 168, 138, 0.6);
+}
+
 /* ── Hero de Novedades ── */
 .novedades-hero {
   background: linear-gradient(135deg, #e4ded5 0%, #d8e2d8 50%, #eae3da 100%);
