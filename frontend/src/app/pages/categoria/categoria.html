@@ -25,12 +25,12 @@
         </div>
       </div>
 
-      <div class="hero-preview" *ngIf="productos.length">
+      <div class="hero-preview" *ngIf="prendasHero.length">
         <div class="editorial-card main">
-          <img [src]="imagen(productos[0])" [alt]="productos[0].nombre" />
+          <img [src]="imagen(prendasHero[0])" [alt]="prendasHero[0].nombre" />
         </div>
         <div class="editorial-card small">
-          <img [src]="imagen(productos[1] || productos[0])" [alt]="(productos[1] || productos[0]).nombre" />
+          <img [src]="imagen(prendasHero[1] || prendasHero[0])" [alt]="(prendasHero[1] || prendasHero[0]).nombre" />
         </div>
       </div>
     </div>
@@ -50,31 +50,36 @@
       <span class="counter">{{ productos.length }} prendas</span>
     </div>
 
-    <p class="loading" *ngIf="cargando">Cargando productos...</p>
+    <div class="pinboard-body" [class.is-loading]="cargando">
+      <div class="loading-overlay" *ngIf="cargando">
+        <div class="spinner"></div>
+        <span>Cargando colección {{ titulo }}...</span>
+      </div>
 
-    <div class="masonry" *ngIf="!cargando">
-      <article class="pin-card" *ngFor="let producto of productos">
-        <div class="pin-image">
-          <img [src]="imagen(producto)" [alt]="producto.nombre" />
-          <span class="tag" *ngIf="producto.stock < 10">Últimas</span>
-          <button class="save-button" type="button" aria-label="Guardar producto">?</button>
-        </div>
-        <div class="pin-meta">
-          <div>
-            <p>{{ producto.categoria }}</p>
-            <h3>{{ producto.nombre }}</h3>
-            <small>{{ producto.color }} · Talla {{ producto.talla }}</small>
+      <div class="masonry" *ngIf="productos.length">
+        <article class="pin-card" *ngFor="let producto of productos">
+          <div class="pin-image">
+            <img [src]="imagen(producto)" [alt]="producto.nombre" loading="lazy" />
+            <span class="tag" *ngIf="producto.stock < 10">Últimas</span>
+            <button class="save-button" type="button" aria-label="Guardar producto">✦</button>
           </div>
-          <strong>{{ producto.precio | currency:'PEN':'symbol':'1.2-2' }}</strong>
-        </div>
-        <div class="pin-actions">
-          <a class="ghost" [routerLink]="['/producto', producto.id]">Ver detalle</a>
-          <a class="add-cart" [routerLink]="['/producto', producto.id]">Elegir variante</a>
-        </div>
-      </article>
-    </div>
+          <div class="pin-meta">
+            <div>
+              <p>{{ producto.categoria }}</p>
+              <h3>{{ producto.nombre }}</h3>
+              <small>{{ producto.color }} · Talla {{ producto.talla }}</small>
+            </div>
+            <strong>{{ producto.precio | currency:'PEN':'symbol':'1.2-2' }}</strong>
+          </div>
+          <div class="pin-actions">
+            <a class="ghost" [routerLink]="['/producto', producto.id]">Ver detalle</a>
+            <a class="add-cart" [routerLink]="['/producto', producto.id]">Elegir variante</a>
+          </div>
+        </article>
+      </div>
 
-    <p class="empty" *ngIf="!cargando && !productos.length">Pronto tendremos novedades para esta categoría.</p>
+      <p class="empty" *ngIf="!cargando && !productos.length">Pronto tendremos novedades para esta categoría.</p>
+    </div>
   </section>
 
   <app-carrito-drawer [abierto]="carritoAbierto" (cerrado)="cerrarCarrito()"></app-carrito-drawer>
