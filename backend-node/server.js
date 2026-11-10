@@ -317,18 +317,42 @@ app.get('/productos/:id', async (req, res) => {
     const producto = (await getProductos()).find(item => Number(item.id) === id && item.activo !== false);
     if (!producto) return res.status(404).json({ error: 'No encontramos esta prenda. Puede que ya no esté disponible.' });
 
-    const variante = {
-      id: producto.id,
-      talla: producto.talla || 'Única',
-      color: producto.color || 'Negro',
-      stock: Number(producto.stock) || 0,
-      precio: Number(producto.precio) || 0,
-      sku: producto.sku || `NOVA-${producto.id}`,
-    };
+    let variantes = [];
+    if (pool) {
+      try {
+        const varsRes = await pool.request()
+          .input('idProd', sql.Int, id)
+          .query('SELECT IdVariante AS id, Talla AS talla, Color AS color, Stock AS stock, Precio AS precio, CodigoSKU AS sku FROM producto_variantes WHERE IdProducto = @idProd AND Activo = 1');
+        variantes = varsRes.recordset.map(v => ({
+          id: Number(v.id),
+          talla: v.talla,
+          color: v.color,
+          stock: Number(v.stock),
+          precio: Number(v.precio),
+          sku: v.sku,
+          imagen: producto.imagen,
+        }));
+      } catch (errVars) {
+        console.error('Error al consultar variantes en SQL Server:', errVars);
+      }
+    }
+
+    if (!variantes.length) {
+      variantes = [{
+        id: producto.id,
+        talla: producto.talla || 'Única',
+        color: producto.color || 'Negro',
+        stock: Number(producto.stock) || 0,
+        precio: Number(producto.precio) || 0,
+        sku: producto.sku || `NOVA-${producto.id}`,
+        imagen: producto.imagen,
+      }];
+    }
+
     return res.json({
       ...producto,
       descripcion: producto.descripcion || `Prenda ${producto.nombre} de nuestra colección.`,
-      variantes: [variante],
+      variantes,
       imagenes: producto.imagen ? [{ url: producto.imagen, alt: producto.nombre, orden: 0 }] : [],
     });
   } catch (error) {
