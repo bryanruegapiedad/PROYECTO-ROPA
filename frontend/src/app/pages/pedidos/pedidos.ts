@@ -35,7 +35,6 @@ export class Pedidos implements OnInit {
   cliente = '';
   direccionEnvio = 'Atención en Tienda';
   metodoPago = 'Efectivo';
-  productoSeleccionadoId = 0;
   cantidad = 1;
   lineas: LineaPedido[] = [];
   cargando = true;
@@ -43,6 +42,10 @@ export class Pedidos implements OnInit {
   mensaje = '';
   error = '';
   fechaActual = new Date();
+
+  // Selector visual de prendas
+  busquedaPrenda = '';
+  prendaSeleccionada: Producto | null = null;
 
   ngOnInit(): void {
     this.cargar();
@@ -82,14 +85,49 @@ export class Pedidos implements OnInit {
     });
   }
 
-  agregarLinea(): void {
-    const productoId = Number(this.productoSeleccionadoId);
-    const producto = this.productos.find(item => item.id === productoId);
-    if (!producto || this.cantidad < 1) return;
-    const existente = this.lineas.find(item => item.productoId === productoId);
-    if (existente) existente.cantidad += this.cantidad;
-    else this.lineas.push({ productoId, cantidad: this.cantidad });
-    this.productoSeleccionadoId = 0;
+  get prendasFiltradas(): Producto[] {
+    const q = this.busquedaPrenda.trim().toLowerCase();
+    if (!q) return this.productos;
+    return this.productos.filter(p =>
+      p.nombre.toLowerCase().includes(q) ||
+      (p.categoria && p.categoria.toLowerCase().includes(q)) ||
+      (p.color && p.color.toLowerCase().includes(q)) ||
+      (p.sku && p.sku.toLowerCase().includes(q))
+    );
+  }
+
+  seleccionarPrenda(prod: Producto): void {
+    if (prod.stock <= 0) return;
+    this.prendaSeleccionada = prod;
+    this.cantidad = 1;
+    this.cdr.detectChanges();
+  }
+
+  incrementarCantidad(): void {
+    if (!this.prendaSeleccionada) return;
+    if (this.cantidad < this.prendaSeleccionada.stock) {
+      this.cantidad++;
+      this.cdr.detectChanges();
+    }
+  }
+
+  decrementarCantidad(): void {
+    if (this.cantidad > 1) {
+      this.cantidad--;
+      this.cdr.detectChanges();
+    }
+  }
+
+  agregarPrendaSeleccionada(): void {
+    if (!this.prendaSeleccionada || this.cantidad < 1) return;
+    const prodId = this.prendaSeleccionada.id;
+    const existente = this.lineas.find(item => item.productoId === prodId);
+    if (existente) {
+      existente.cantidad += this.cantidad;
+    } else {
+      this.lineas.push({ productoId: prodId, cantidad: this.cantidad });
+    }
+    this.prendaSeleccionada = null;
     this.cantidad = 1;
     this.cdr.detectChanges();
   }
@@ -100,11 +138,16 @@ export class Pedidos implements OnInit {
   }
 
   nombreProducto(productoId: number): string {
-    return this.productos.find(item => item.id === productoId)?.nombre || 'Producto';
+    return this.productos.find(item => item.id === productoId)?.nombre || 'Prenda';
   }
 
   precioProducto(productoId: number): number {
     return this.productos.find(item => item.id === productoId)?.precio || 0;
+  }
+
+  fotoDePrenda(productoId: number): string {
+    const p = this.productos.find(item => item.id === productoId);
+    return this.imagenProducto(p);
   }
 
   get totalPedido(): number {
@@ -135,7 +178,7 @@ export class Pedidos implements OnInit {
     this.error = '';
     this.mensaje = '';
     if (!this.cliente.trim() || !this.lineas.length) {
-      this.error = 'Indica el nombre del cliente y añade al menos un producto a la orden.';
+      this.error = 'Indica el nombre del cliente y añade al menos una prenda a la orden.';
       return;
     }
     this.guardando = true;
@@ -169,6 +212,7 @@ export class Pedidos implements OnInit {
         this.lineas = [];
         this.cliente = '';
         this.direccionEnvio = 'Atención en Tienda';
+        this.prendaSeleccionada = null;
         this.mensaje = `¡Pedido #${pedido.id} registrado con éxito! Entrega estimada: ${this.fecha(pedido.entregaEstimada)}.`;
         this.cargar();
         this.cdr.detectChanges();

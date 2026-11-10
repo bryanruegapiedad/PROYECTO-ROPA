@@ -343,7 +343,7 @@ nav button {
   align-items: flex-start;
   display: flex;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 
   h3 {
     color: #201d1c;
@@ -373,8 +373,8 @@ nav button {
 /* ── Work Grid (Formulario + Rotación) ── */
 .work-grid {
   display: grid;
-  gap: 20px;
-  grid-template-columns: 1.15fr 1fr;
+  gap: 24px;
+  grid-template-columns: 1.3fr 0.95fr;
   margin-bottom: 24px;
 }
 
@@ -387,7 +387,7 @@ nav button {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 
   &.error {
     background: #fee2e2;
@@ -400,103 +400,518 @@ nav button {
   }
 }
 
-/* ── Formulario de Pedido ── */
-.form-fields {
+/* ═══════════════════════════════════════════════════════════
+   CUADRO DE REGISTRO DE PEDIDO (FORMULARIO REORDENADO)
+   ═══════════════════════════════════════════════════════════ */
+.order-form-card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+}
 
-  label {
-    color: #6a5e57;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+/* 1. Grid de Información del Cliente */
+.client-info-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
 
-    input,
-    select {
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid rgba(36, 31, 27, 0.12);
-      border-radius: 8px;
-      color: #1d1a17;
-      display: block;
-      font: inherit;
-      font-size: 12px;
-      margin-top: 5px;
-      outline: none;
-      padding: 10px 12px;
-      width: 100%;
-      transition: all 0.2s ease;
+  .field-item {
+    display: flex;
+    flex-direction: column;
 
-      &:focus {
-        border-color: #a86d55;
-        background: #fff;
-      }
+    &.full-width {
+      grid-column: span 2;
+    }
+
+    label {
+      color: #6a5e57;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
     }
   }
 }
 
-.add-product-row {
-  display: grid;
-  grid-template-columns: 1fr 70px 42px;
-  gap: 8px;
-  align-items: flex-end;
-  background: rgba(36, 31, 27, 0.03);
-  padding: 12px;
-  border-radius: 10px;
-  margin-top: 4px;
+.input-container {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(36, 31, 27, 0.12);
+  border-radius: 8px;
+  padding: 0 12px;
+  transition: all 0.2s ease;
 
-  label {
-    margin-bottom: 0;
+  &:focus-within {
+    border-color: #a86d55;
+    box-shadow: 0 0 0 3px rgba(168, 109, 85, 0.15);
+    background: #fff;
+  }
+
+  .input-icon {
+    font-size: 13px;
+    margin-right: 8px;
+    opacity: 0.7;
+  }
+
+  input,
+  select {
+    background: transparent;
+    border: 0;
+    color: #1d1a17;
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+    padding: 10px 0;
+    width: 100%;
   }
 }
 
-.btn-add-line {
+/* 2. Selector Visual de Prendas (Boutique Style) */
+.garment-picker-section {
+  background: rgba(36, 31, 27, 0.03);
+  border: 1px solid rgba(36, 31, 27, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.picker-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+
+.picker-section-title {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #3b3531;
+}
+
+.picker-section-subtitle {
+  font-size: 10px;
+  color: #8c7e75;
+  margin: 2px 0 0;
+}
+
+.picker-search-box {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1px solid rgba(36, 31, 27, 0.12);
+  border-radius: 6px;
+  padding: 0 8px;
+  width: 190px;
+
+  .search-icon {
+    font-size: 13px;
+    color: #8c7e75;
+    margin-right: 4px;
+  }
+
+  input {
+    background: transparent;
+    border: 0;
+    font-size: 11px;
+    outline: none;
+    padding: 6px 0;
+    width: 100%;
+    color: #1d1a17;
+  }
+
+  .btn-clear-search {
+    background: transparent;
+    border: 0;
+    color: #8c7e75;
+    font-size: 10px;
+    cursor: pointer;
+    padding: 2px;
+  }
+}
+
+/* Scrollable Garment Chips Grid */
+.garments-scroll-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 4px 2px;
+  margin-bottom: 14px;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(36, 31, 27, 0.15);
+    border-radius: 999px;
+  }
+}
+
+.garment-card-chip {
+  background: #fff;
+  border: 1px solid rgba(36, 31, 27, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    border-color: rgba(168, 109, 85, 0.4);
+  }
+
+  &.selected {
+    border-color: #a86d55;
+    box-shadow: 0 0 0 2px #a86d55, 0 4px 12px rgba(168, 109, 85, 0.2);
+    background: #fdfaf7;
+  }
+
+  &.out-of-stock {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(0.6);
+  }
+}
+
+.chip-image {
+  background-position: center;
+  background-size: cover;
+  height: 85px;
+  position: relative;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.stock-chip {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 999px;
+  font-size: 8px;
+  font-weight: 700;
+  padding: 2px 6px;
+  color: #2b5142;
+
+  &.low {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  &.out {
+    background: #4b5563;
+    color: #fff;
+  }
+}
+
+.chip-selected-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: #a86d55;
+  color: #fff;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.chip-content {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chip-name {
+  font-size: 11px;
+  color: #1d1a17;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chip-category {
+  font-size: 9px;
+  color: #8c7e75;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 1px 0 4px;
+}
+
+.chip-price {
+  font-size: 11px;
+  color: #1f1b19;
+  font-weight: 700;
+}
+
+.empty-picker {
+  text-align: center;
+  padding: 20px;
+  color: #8c7e75;
+  font-size: 11px;
+}
+
+/* Action Bar for Selected Garment */
+.selected-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border: 1px solid rgba(168, 109, 85, 0.3);
+  border-radius: 10px;
+  padding: 10px 14px;
+  gap: 12px;
+  box-shadow: 0 4px 14px rgba(168, 109, 85, 0.08);
+}
+
+.selected-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.selected-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background-position: center;
+  background-size: cover;
+  flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.selected-texts {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  .selected-tag {
+    font-size: 8px;
+    font-weight: 800;
+    color: #a86d55;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  strong {
+    font-size: 11px;
+    color: #1d1a17;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  small {
+    font-size: 10px;
+    color: #8c7e75;
+  }
+}
+
+.quantity-stepper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  label {
+    font-size: 8px;
+    font-weight: 700;
+    color: #8c7e75;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+}
+
+.stepper-box {
+  display: flex;
+  align-items: center;
+  border: 1px solid rgba(36, 31, 27, 0.15);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fff;
+
+  .btn-step {
+    background: transparent;
+    border: 0;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    font-weight: 700;
+    color: #1d1a17;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+
+    &:hover:not(:disabled) {
+      background: #f2ece6;
+    }
+
+    &:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+  }
+
+  input {
+    border: 0;
+    width: 34px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    outline: none;
+    -moz-appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
+}
+
+.subtotal-display {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 65px;
+
+  small {
+    font-size: 8px;
+    font-weight: 700;
+    color: #8c7e75;
+    text-transform: uppercase;
+  }
+
+  strong {
+    font-family: Georgia, serif;
+    font-size: 13px;
+    color: #1f1b19;
+  }
+}
+
+.btn-add-action {
   background: #1f2521;
   color: #fff;
   border: 0;
   border-radius: 8px;
-  font-size: 20px;
-  height: 38px;
+  padding: 9px 15px;
+  font-size: 11px;
+  font-weight: 700;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  white-space: nowrap;
   transition: all 0.2s ease;
 
   &:hover {
     background: #3b483f;
+    transform: translateY(-1px);
   }
 }
 
-/* ── Líneas del Pedido ── */
-.order-lines-box {
-  margin-top: 14px;
-  border-top: 1px solid rgba(36, 31, 27, 0.08);
-  border-bottom: 1px solid rgba(36, 31, 27, 0.08);
-  max-height: 160px;
+.prompt-select-box {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px dashed rgba(36, 31, 27, 0.15);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  font-size: 11px;
+  color: #726760;
+
+  span {
+    font-size: 14px;
+    margin-right: 4px;
+  }
+}
+
+/* 3. Lista de Prendas en la Orden */
+.order-summary-box {
+  margin-bottom: 20px;
+}
+
+.summary-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.summary-label {
+  font-size: 9px;
+  font-weight: 800;
+  color: #6a5e57;
+  letter-spacing: 0.08em;
+}
+
+.btn-clear-lines {
+  background: transparent;
+  border: 0;
+  color: #a14856;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.order-lines-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 180px;
   overflow-y: auto;
 }
 
-.order-line-item {
+.order-line-card {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 8px 4px;
-  border-bottom: 1px dashed rgba(36, 31, 27, 0.06);
-
-  &:last-child {
-    border-bottom: 0;
-  }
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(36, 31, 27, 0.08);
+  border-radius: 8px;
+  padding: 8px 12px;
+  gap: 12px;
 }
 
-.line-info {
+.line-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background-position: center;
+  background-size: cover;
+  flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.line-data {
   flex: 1;
+  min-width: 0;
+
   strong {
     display: block;
-    font-size: 12px;
+    font-size: 11px;
     color: #1d1a17;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
+
   small {
     display: block;
     font-size: 10px;
@@ -504,71 +919,99 @@ nav button {
   }
 }
 
-.line-subtotal {
+.line-subtotal-val {
   font-family: Georgia, serif;
   font-size: 13px;
   color: #1f1b19;
-  margin: 0 12px;
+  white-space: nowrap;
 }
 
-.btn-remove-line {
+.btn-delete-line {
   background: transparent;
   border: 0;
   color: #a14856;
-  font-size: 12px;
+  font-size: 11px;
   cursor: pointer;
-  padding: 4px;
+  padding: 4px 6px;
+  border-radius: 4px;
 
   &:hover {
-    color: #dc2626;
+    background: #fee2e2;
   }
 }
 
-.empty-lines {
+.empty-lines-card {
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px dashed rgba(36, 31, 27, 0.12);
+  border-radius: 8px;
+  padding: 18px;
   text-align: center;
-  padding: 16px;
-  color: #8c7e75;
-  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  span {
+    font-size: 20px;
+    opacity: 0.6;
+  }
+
+  p {
+    font-size: 11px;
+    color: #8c7e75;
+    margin: 0;
+  }
 }
 
-.order-total-bar {
+/* 4. Pie de Orden: Total y Botón Submit */
+.order-footer-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 18px;
-  padding-top: 12px;
+  border-top: 1px solid rgba(36, 31, 27, 0.1);
+  padding-top: 16px;
+  margin-top: auto;
+}
+
+.total-display {
+  display: flex;
+  flex-direction: column;
 
   small {
-    display: block;
     font-size: 9px;
-    text-transform: uppercase;
-    font-weight: 700;
+    font-weight: 800;
     color: #8c7e75;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
   strong {
-    display: block;
-    font-size: 20px;
-    color: #1f1b19;
     font-family: Georgia, serif;
+    font-size: 22px;
+    color: #1f1b19;
   }
 }
 
-.btn-create-order {
+.btn-submit-order {
   background: #1f2521;
+  color: #f7f3ee;
   border: 0;
   border-radius: 9px;
-  color: #f7f3ee;
-  cursor: pointer;
+  padding: 12px 24px;
   font-size: 12px;
   font-weight: 700;
-  padding: 12px 22px;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  box-shadow: 0 4px 14px rgba(31, 37, 33, 0.18);
   transition: all 0.2s ease;
 
-  &:hover {
+  span span {
+    margin-left: 4px;
+  }
+
+  &:hover:not(:disabled) {
     background: #313a34;
     transform: translateY(-1px);
   }
@@ -783,8 +1226,7 @@ nav button {
 }
 
 /* ── Responsividad ── */
-@media (max-width: 900px) {
-  .summary-grid,
+@media (max-width: 1080px) {
   .work-grid {
     grid-template-columns: 1fr;
   }
@@ -812,5 +1254,17 @@ nav button {
 
   .contenido {
     padding: 20px 16px;
+  }
+
+  .client-info-grid {
+    grid-template-columns: 1fr;
+    .field-item.full-width {
+      grid-column: span 1;
+    }
+  }
+
+  .selected-action-bar {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

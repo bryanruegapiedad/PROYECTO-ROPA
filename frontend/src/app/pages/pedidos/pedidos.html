@@ -79,15 +79,16 @@
     <!-- Grid de Trabajo (Formulario de Venta + Panel de Rotación) -->
     <section class="work-grid">
       <!-- Formulario para Registrar Venta -->
-      <article class="panel order-form">
+      <article class="panel order-form-card">
         <div class="panel-heading">
           <div>
             <p class="overline">NUEVA TRANSACCIÓN</p>
             <h3>Registrar Pedido / Venta</h3>
           </div>
-          <span class="form-badge">+ Venta</span>
+          <span class="form-badge">Boutique POS</span>
         </div>
 
+        <!-- Mensajes de feedback -->
         <div class="feedback-msg error" *ngIf="error">
           <span>✕</span> {{ error }}
         </div>
@@ -95,75 +96,174 @@
           <span>✓</span> {{ mensaje }}
         </div>
 
-        <div class="form-fields">
-          <label>
-            Nombre del cliente
-            <input type="text" [(ngModel)]="cliente" placeholder="Ej. Camila Fernández">
-          </label>
+        <!-- 1. Datos del Cliente (Grid organizado y simétrico) -->
+        <div class="client-info-grid">
+          <div class="field-item">
+            <label for="cliente">Nombre del Cliente *</label>
+            <div class="input-container">
+              <span class="input-icon">👤</span>
+              <input id="cliente" type="text" [(ngModel)]="cliente" placeholder="Ej. Camila Fernández">
+            </div>
+          </div>
 
-          <label>
-            Dirección de entrega
-            <input type="text" [(ngModel)]="direccionEnvio" placeholder="Ej. Atención en Tienda o Av. Larco 450">
-          </label>
-
-          <label>
-            Método de pago
-            <select [(ngModel)]="metodoPago">
-              <option>Efectivo</option>
-              <option>Tarjeta de Crédito</option>
-              <option>Tarjeta de Débito</option>
-              <option>Yape / Plin</option>
-              <option>Transferencia</option>
-            </select>
-          </label>
-
-          <!-- Fila de Agregar Prenda -->
-          <div class="add-product-row">
-            <div class="prod-select-wrap">
-              <label>Seleccionar prenda del catálogo</label>
-              <select [(ngModel)]="productoSeleccionadoId">
-                <option [ngValue]="0">Selecciona una prenda...</option>
-                <option *ngFor="let prod of productos" [ngValue]="prod.id" [disabled]="prod.stock === 0">
-                  {{ prod.nombre }} · {{ prod.precio | currency:'PEN':'symbol':'1.2-2' }} ({{ prod.stock }} disp.)
-                </option>
+          <div class="field-item">
+            <label for="metodoPago">Método de Pago</label>
+            <div class="input-container">
+              <span class="input-icon">💳</span>
+              <select id="metodoPago" [(ngModel)]="metodoPago">
+                <option>Efectivo</option>
+                <option>Tarjeta de Crédito</option>
+                <option>Tarjeta de Débito</option>
+                <option>Yape / Plin</option>
+                <option>Transferencia</option>
               </select>
             </div>
-            <div class="prod-qty-wrap">
-              <label>Cant.</label>
-              <input type="number" min="1" [(ngModel)]="cantidad">
+          </div>
+
+          <div class="field-item full-width">
+            <label for="direccion">Dirección de Entrega / Modalidad</label>
+            <div class="input-container">
+              <span class="input-icon">📍</span>
+              <input id="direccion" type="text" [(ngModel)]="direccionEnvio" placeholder="Ej. Atención en Tienda o Av. Larco 450, Miraflores">
             </div>
-            <button class="btn-add-line" type="button" (click)="agregarLinea()" title="Añadir prenda">+</button>
           </div>
         </div>
 
-        <!-- Líneas del Pedido -->
-        <div class="order-lines-box" *ngIf="lineas.length; else noLines">
-          <div class="order-line-item" *ngFor="let linea of lineas">
-            <div class="line-info">
-              <strong>{{ nombreProducto(linea.productoId) }}</strong>
-              <small>{{ linea.cantidad }} × {{ precioProducto(linea.productoId) | currency:'PEN':'symbol':'1.2-2' }}</small>
+        <!-- 2. Selector Visual de Prendas (Estilo Boutique con Fotos) -->
+        <div class="garment-picker-section">
+          <div class="picker-top-bar">
+            <div>
+              <span class="picker-section-title">SELECCIÓN DE PRENDA</span>
+              <p class="picker-section-subtitle">Haz clic en la prenda que deseas agregar a la orden</p>
             </div>
-            <strong class="line-subtotal">
-              {{ (linea.cantidad * precioProducto(linea.productoId)) | currency:'PEN':'symbol':'1.2-2' }}
-            </strong>
-            <button class="btn-remove-line" type="button" (click)="quitarLinea(linea.productoId)" title="Quitar">✕</button>
+            <!-- Buscador en tiempo real -->
+            <div class="picker-search-box">
+              <span class="search-icon">⌕</span>
+              <input type="text" [(ngModel)]="busquedaPrenda" placeholder="Buscar prenda o color...">
+              <button class="btn-clear-search" *ngIf="busquedaPrenda" (click)="busquedaPrenda = ''">✕</button>
+            </div>
           </div>
+
+          <!-- Cuadrícula Visual de Prendas con Fotos y Stock -->
+          <div class="garments-scroll-grid" *ngIf="prendasFiltradas.length; else noGarmentsFound">
+            <div 
+              class="garment-card-chip" 
+              *ngFor="let prod of prendasFiltradas"
+              [class.selected]="prendaSeleccionada?.id === prod.id"
+              [class.out-of-stock]="prod.stock === 0"
+              (click)="seleccionarPrenda(prod)">
+              
+              <div class="chip-image" [style.background-image]="'url(' + imagenProducto(prod) + ')'">
+                <span class="stock-chip" [class.low]="prod.stock < 10" *ngIf="prod.stock > 0">
+                  {{ prod.stock }} disp.
+                </span>
+                <span class="stock-chip out" *ngIf="prod.stock === 0">
+                  Agotado
+                </span>
+              </div>
+              
+              <div class="chip-content">
+                <strong class="chip-name">{{ prod.nombre }}</strong>
+                <span class="chip-category">{{ prod.categoria }} · {{ prod.color }}</span>
+                <strong class="chip-price">{{ prod.precio | currency:'PEN':'symbol':'1.2-2' }}</strong>
+              </div>
+
+              <div class="chip-selected-badge" *ngIf="prendaSeleccionada?.id === prod.id">
+                ✓
+              </div>
+            </div>
+          </div>
+
+          <ng-template #noGarmentsFound>
+            <div class="empty-picker">
+              <p>No se encontraron prendas con "{{ busquedaPrenda }}".</p>
+            </div>
+          </ng-template>
+
+          <!-- Barra de Configuración de Cantidad y Añadir -->
+          <div class="selected-action-bar" *ngIf="prendaSeleccionada; else promptSelectPrenda">
+            <div class="selected-summary">
+              <div class="selected-thumb" [style.background-image]="'url(' + imagenProducto(prendaSeleccionada) + ')'"></div>
+              <div class="selected-texts">
+                <span class="selected-tag">Prenda elegida:</span>
+                <strong>{{ prendaSeleccionada.nombre }}</strong>
+                <small>{{ prendaSeleccionada.precio | currency:'PEN':'symbol':'1.2-2' }} c/u</small>
+              </div>
+            </div>
+
+            <!-- Stepper de Cantidad -->
+            <div class="quantity-stepper">
+              <label>Cantidad</label>
+              <div class="stepper-box">
+                <button type="button" class="btn-step" (click)="decrementarCantidad()" [disabled]="cantidad <= 1">−</button>
+                <input type="number" min="1" [max]="prendaSeleccionada.stock" [(ngModel)]="cantidad">
+                <button type="button" class="btn-step" (click)="incrementarCantidad()" [disabled]="cantidad >= prendaSeleccionada.stock">+</button>
+              </div>
+            </div>
+
+            <!-- Subtotal de Línea -->
+            <div class="subtotal-display">
+              <small>Subtotal</small>
+              <strong>{{ (prendaSeleccionada.precio * cantidad) | currency:'PEN':'symbol':'1.2-2' }}</strong>
+            </div>
+
+            <!-- Botón Añadir -->
+            <button class="btn-add-action" type="button" (click)="agregarPrendaSeleccionada()">
+              ＋ Añadir a la Orden
+            </button>
+          </div>
+
+          <ng-template #promptSelectPrenda>
+            <div class="prompt-select-box">
+              <span>👉</span> Haz clic en cualquiera de las prendas arriba para seleccionarla y configurar la cantidad.
+            </div>
+          </ng-template>
         </div>
 
-        <ng-template #noLines>
-          <div class="empty-lines">
-            <p>Selecciona prendas arriba para preparar el pedido.</p>
+        <!-- 3. Lista de Prendas Agregadas a la Orden -->
+        <div class="order-summary-box">
+          <div class="summary-box-header">
+            <span class="summary-label">PRENDAS EN ESTA ORDEN ({{ lineas.length }})</span>
+            <button class="btn-clear-lines" *ngIf="lineas.length" type="button" (click)="lineas = []">Vaciar orden</button>
           </div>
-        </ng-template>
 
-        <!-- Total y Acción -->
-        <div class="order-total-bar">
-          <div>
+          <div class="order-lines-list" *ngIf="lineas.length; else noLinesAdded">
+            <div class="order-line-card" *ngFor="let linea of lineas">
+              <div class="line-thumb" [style.background-image]="'url(' + fotoDePrenda(linea.productoId) + ')'"></div>
+              <div class="line-data">
+                <strong>{{ nombreProducto(linea.productoId) }}</strong>
+                <small>{{ linea.cantidad }} unidad(es) × {{ precioProducto(linea.productoId) | currency:'PEN':'symbol':'1.2-2' }}</small>
+              </div>
+              <strong class="line-subtotal-val">
+                {{ (linea.cantidad * precioProducto(linea.productoId)) | currency:'PEN':'symbol':'1.2-2' }}
+              </strong>
+              <button class="btn-delete-line" type="button" (click)="quitarLinea(linea.productoId)" title="Eliminar de la orden">
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <ng-template #noLinesAdded>
+            <div class="empty-lines-card">
+              <span>🛍</span>
+              <p>No has añadido prendas a esta orden todavía.</p>
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- 4. Pie de Orden: Total y Botón de Envío -->
+        <div class="order-footer-bar">
+          <div class="total-display">
             <small>Total a cobrar</small>
             <strong>{{ totalPedido | currency:'PEN':'symbol':'1.2-2' }}</strong>
           </div>
-          <button class="btn-create-order" type="button" [disabled]="guardando || !lineas.length || !cliente.trim()" (click)="crearPedido()">
-            {{ guardando ? 'Guardando pedido...' : 'Registrar Pedido' }} <span>→</span>
+          <button 
+            class="btn-submit-order" 
+            type="button" 
+            [disabled]="guardando || !lineas.length || !cliente.trim()" 
+            (click)="crearPedido()">
+            <span *ngIf="!guardando">Registrar Pedido <span>→</span></span>
+            <span *ngIf="guardando">Guardando en almacén...</span>
           </button>
         </div>
       </article>
