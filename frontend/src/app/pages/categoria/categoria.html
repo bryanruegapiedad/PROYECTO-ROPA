@@ -4,6 +4,7 @@
     <nav>
       <a routerLink="/tienda">Colección</a>
       <a class="active" routerLink="/tienda/categoria/mujeres">Categorías</a>
+      <a routerLink="/tienda/novedades">Novedades</a>
     </nav>
     <div class="header-actions">
       <button class="cart-button" type="button" (click)="alternarCarrito()" aria-controls="cart-drawer" [attr.aria-expanded]="carritoAbierto">Carrito <span>{{ carrito.cantidadTotal }}</span></button>

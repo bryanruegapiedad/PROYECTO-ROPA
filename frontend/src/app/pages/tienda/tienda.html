@@ -4,7 +4,7 @@
     <nav>
       <a class="active" routerLink="/tienda">Colección</a>
       <a routerLink="/tienda/categoria/mujeres">Categorías</a>
-      <a href="#novedades">Novedades</a>
+      <a routerLink="/tienda/novedades">Novedades</a>
     </nav>
     <div class="header-actions">
       <button class="cart-button" type="button" (click)="alternarCarrito()" aria-controls="cart-drawer" [attr.aria-expanded]="carritoAbierto">Carrito <span>{{ carrito.cantidadTotal }}</span></button>
@@ -19,7 +19,7 @@
       <h1>Viste tu<br><em>propia historia.</em></h1>
       <p>Prendas elegantes para cada momento, con un look que habla por ti.</p>
       <div class="hero-cta-row">
-        <a class="hero-link" href="#categorias">Explorar colección <span>↗</span></a>
+        <a class="hero-link" (click)="scrollCategorias($event)" style="cursor: pointer;">Explorar colección <span>↗</span></a>
         <span class="hero-pill">Envío gratis desde S/299</span>
       </div>
     </div>

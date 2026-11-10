@@ -73,6 +73,16 @@ export class Tienda {
     this.router.navigate(['/tienda/categoria', categoria]);
   }
 
+  scrollCategorias(event?: Event): void {
+    if (event) event.preventDefault();
+    const elemento = document.getElementById('categorias');
+    if (elemento) {
+      elemento.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      this.router.navigate(['/tienda/categoria', 'mujeres']);
+    }
+  }
+
   alternarCarrito(): void { this.carritoAbierto = !this.carritoAbierto; }
   cerrarCarrito(): void { this.carritoAbierto = false; }
   abrirDetalle(producto: Producto): void {

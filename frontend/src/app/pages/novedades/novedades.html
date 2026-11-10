@@ -1,0 +1,86 @@
+<main class="novedades-page">
+  <header class="store-header">
+    <a class="brand" routerLink="/tienda"><span class="brand-mark">N</span><span>NOVA <small>STUDIO</small></span></a>
+    <nav>
+      <a routerLink="/tienda">Colección</a>
+      <a routerLink="/tienda/categoria/mujeres">Categorías</a>
+      <a class="active" routerLink="/tienda/novedades">Novedades</a>
+    </nav>
+    <div class="header-actions">
+      <button class="cart-button" type="button" (click)="alternarCarrito()" aria-controls="cart-drawer" [attr.aria-expanded]="carritoAbierto">
+        Carrito <span>{{ carrito.cantidadTotal }}</span>
+      </button>
+      <button class="outline-button" type="button" (click)="cerrarSesion()">Salir</button>
+      <span class="user-mark">U</span>
+    </div>
+  </header>
+
+  <!-- Banner Editorial de Novedades -->
+  <section class="novedades-hero">
+    <div class="hero-content">
+      <p class="eyebrow">DROPS EXCLUSIVOS · TEMPORADA 2026</p>
+      <h1>Novedades &<br><em>Últimas Llegadas</em></h1>
+      <p class="hero-desc">
+        Piezas de edición limitada, cortes vanguardistas y las tendencias más esperadas de la temporada recién salidas del atelier.
+      </p>
+      
+      <!-- Pestañas de Filtro Rápido -->
+      <div class="filter-pills">
+        <button type="button" [class.active]="filtroActivo === 'todos'" (click)="cambiarFiltro('todos')">Todos los ingresos</button>
+        <button type="button" [class.active]="filtroActivo === 'recientes'" (click)="cambiarFiltro('recientes')">Últimos 7 días</button>
+        <button type="button" [class.active]="filtroActivo === 'tendencias'" (click)="cambiarFiltro('tendencias')">Tendencias</button>
+        <button type="button" [class.active]="filtroActivo === 'edicion-limitada'" (click)="cambiarFiltro('edicion-limitada')">Edición limitada</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cuadrícula de Novedades -->
+  <section class="novedades-grid-section">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">CATÁLOGO DE LANZAMIENTOS</p>
+        <h2>Explora las piezas destacadas</h2>
+      </div>
+      <span class="counter">{{ productosFiltrados.length }} prendas</span>
+    </div>
+
+    <div class="grid-body" [class.is-loading]="cargando">
+      <div class="loading-overlay" *ngIf="cargando">
+        <div class="spinner"></div>
+        <span>Cargando novedades...</span>
+      </div>
+
+      <div class="product-grid" *ngIf="productosFiltrados.length">
+        <article class="product-card" *ngFor="let producto of productosFiltrados">
+          <div class="product-image">
+            <img [src]="imagen(producto)" [alt]="producto.nombre" (error)="onImgError($event)" loading="lazy" />
+            <span class="badge-new">NEW IN</span>
+            <span class="badge-stock" *ngIf="producto.stock <= 10">Quedan {{ producto.stock }}</span>
+          </div>
+          <div class="product-meta">
+            <div>
+              <p class="category">{{ producto.categoria }} · {{ producto.genero }}</p>
+              <h3>{{ producto.nombre }}</h3>
+              <small>{{ producto.color }} · Talla {{ producto.talla }}</small>
+            </div>
+            <strong>{{ producto.precio | currency:'PEN':'symbol':'1.2-2' }}</strong>
+          </div>
+          <div class="product-actions">
+            <a class="view-more" [routerLink]="['/producto', producto.id]">Ver detalle</a>
+            <a class="add-cart" [routerLink]="['/producto', producto.id]">Elegir variante</a>
+          </div>
+        </article>
+      </div>
+
+      <p class="empty" *ngIf="!cargando && !productosFiltrados.length">No se encontraron prendas para este filtro.</p>
+    </div>
+  </section>
+
+  <app-carrito-drawer [abierto]="carritoAbierto" (cerrado)="cerrarCarrito()"></app-carrito-drawer>
+
+  <footer class="store-footer">
+    <div class="brand"><span class="brand-mark">N</span><span>NOVA <small>STUDIO</small></span></div>
+    <p>Moda contemporánea para tu propia historia.</p>
+    <small>© 2026 NOVA Studio · Todos los derechos reservados</small>
+  </footer>
+</main>

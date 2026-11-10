@@ -9,6 +9,7 @@ import { Tienda } from './pages/tienda/tienda';
 import { Categoria } from './pages/categoria/categoria';
 import { ProductoDetalle } from './pages/producto/producto';
 import { Checkout } from './pages/checkout/checkout';
+import { Novedades } from './pages/novedades/novedades';
 
 export const routes: Routes = [
   { path: '', component: Login },
@@ -17,6 +18,8 @@ export const routes: Routes = [
   { path: 'pedidos', component: Pedidos, canActivate: [adminGuard] },
   { path: 'tienda', component: Tienda, canActivate: [authGuard] },
   { path: 'tienda/categoria/:categoria', component: Categoria, canActivate: [authGuard] },
+  { path: 'tienda/novedades', component: Novedades, canActivate: [authGuard] },
+  { path: 'novedades', redirectTo: 'tienda/novedades' },
   { path: 'producto/:id', component: ProductoDetalle, canActivate: [authGuard] },
   { path: 'checkout', component: Checkout, canActivate: [authGuard] },
   { path: '**', redirectTo: '' },
