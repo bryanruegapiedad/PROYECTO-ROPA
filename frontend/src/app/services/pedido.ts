@@ -18,7 +18,7 @@ export class PedidoService {
 
   crear(
     cliente: string,
-    items: { varianteId: number; cantidad: number }[],
+    items: { productoId?: number; varianteId?: number; cantidad: number; nombre?: string }[],
     direccionEnvio: string = '',
     metodoPago: string = 'Efectivo'
   ): Observable<Pedido> {

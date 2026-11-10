@@ -127,10 +127,12 @@ export class CarritoService {
     this.guardar();
   }
 
-  aPedidoItems(): { varianteId: number; cantidad: number }[] {
+  aPedidoItems(): { productoId: number; varianteId: number; cantidad: number; nombre?: string }[] {
     return this.itemsInternos.map(item => ({
+      productoId: item.producto.id,
       varianteId: item.variante.id,
       cantidad: item.cantidad,
+      nombre: item.producto.nombre,
     }));
   }
 

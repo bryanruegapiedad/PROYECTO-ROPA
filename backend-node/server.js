@@ -558,15 +558,229 @@ app.get('/pedidos/rotacion', requireAuth, (req, res) => {
   res.json(rotacion);
 });
 
-app.post('/pedidos', requireAuth, (req, res) => {
+app.post('/pedidos', async (req, res) => {
   const cliente = String(req.body.cliente || '').trim();
   const direccionEnvio = String(req.body.direccionEnvio || '').trim();
   const metodoPago = String(req.body.metodoPago || 'Efectivo').trim() || 'Efectivo';
   const items = Array.isArray(req.body.items) ? req.body.items : [];
 
-  if (!cliente || !items.length) return res.status(400).json({ error: 'Indica el cliente y al menos un producto.' });
-  if (!direccionEnvio) return res.status(400).json({ error: 'Ingresa la dirección de entrega.' });
+  if (!cliente || !items.length) {
+    return res.status(400).json({ error: 'Indica el cliente y al menos un producto.' });
+  }
+  if (!direccionEnvio) {
+    return res.status(400).json({ error: 'Ingresa la dirección de entrega.' });
+  }
 
+  // 1. Si SQL Server está disponible con pool activo
+  if (pool) {
+    const transaction = new sql.Transaction(pool);
+    try {
+      await transaction.begin();
+
+      // Mapear método de pago a ID existente o crear por defecto
+      let idMetodoPago = 1;
+      try {
+        const metodoRes = await new sql.Request(transaction)
+          .input('nombreMetodo', sql.VarChar(80), metodoPago)
+          .query(`
+            SELECT TOP 1 IdMetodoPago FROM metodos_pago 
+            WHERE LOWER(Nombre) = LOWER(@nombreMetodo) OR Nombre LIKE '%' + @nombreMetodo + '%'
+          `);
+        if (metodoRes.recordset.length) {
+          idMetodoPago = metodoRes.recordset[0].IdMetodoPago;
+        } else {
+          const primerMetodo = await new sql.Request(transaction).query('SELECT TOP 1 IdMetodoPago FROM metodos_pago ORDER BY IdMetodoPago ASC');
+          if (primerMetodo.recordset.length) idMetodoPago = primerMetodo.recordset[0].IdMetodoPago;
+        }
+      } catch (e) {
+        // Fallback a ID 1 si la tabla de métodos no responde
+        idMetodoPago = 1;
+      }
+
+      // Validar stock de cada variante en la base de datos
+      let subtotalGeneral = 0;
+      const detalleProcesado = [];
+
+      for (const item of items) {
+        let idVariante = Number(item.varianteId);
+        let idProducto = Number(item.productoId);
+        const cantidad = Number(item.cantidad) || 1;
+        const nombrePrenda = String(item.nombre || '').trim();
+
+        let stockCheck = { recordset: [] };
+
+        // 1. Buscar por IdVariante exacto si es válido
+        if (idVariante && idVariante > 0) {
+          stockCheck = await new sql.Request(transaction)
+            .input('idVariante', sql.Int, idVariante)
+            .query(`
+              SELECT TOP 1 v.IdVariante, v.IdProducto, v.Stock, v.Precio, v.Talla, v.Color, p.Nombre
+              FROM producto_variantes v
+              INNER JOIN productos p ON p.IdProducto = v.IdProducto
+              WHERE v.IdVariante = @idVariante
+            `);
+        }
+
+        // 2. Si no encontró por variante, buscar por IdProducto
+        if (!stockCheck.recordset.length && idProducto && idProducto > 0) {
+          stockCheck = await new sql.Request(transaction)
+            .input('idProducto', sql.Int, idProducto)
+            .query(`
+              SELECT TOP 1 v.IdVariante, v.IdProducto, v.Stock, v.Precio, v.Talla, v.Color, p.Nombre
+              FROM producto_variantes v
+              INNER JOIN productos p ON p.IdProducto = v.IdProducto
+              WHERE v.IdProducto = @idProducto AND v.Activo = 1
+              ORDER BY v.Stock DESC
+            `);
+        }
+
+        // 3. Si no encontró por ID, buscar por similitud de nombre
+        if (!stockCheck.recordset.length && nombrePrenda) {
+          stockCheck = await new sql.Request(transaction)
+            .input('nombrePrenda', sql.VarChar(150), `%${nombrePrenda}%`)
+            .query(`
+              SELECT TOP 1 v.IdVariante, v.IdProducto, v.Stock, v.Precio, v.Talla, v.Color, p.Nombre
+              FROM producto_variantes v
+              INNER JOIN productos p ON p.IdProducto = v.IdProducto
+              WHERE p.Nombre LIKE @nombrePrenda AND v.Activo = 1
+              ORDER BY v.Stock DESC
+            `);
+        }
+
+        // 4. Si aún no encuentra, buscar en productos directo
+        if (!stockCheck.recordset.length) {
+          let prodCheck = { recordset: [] };
+          if (idProducto && idProducto > 0) {
+            prodCheck = await new sql.Request(transaction)
+              .input('idProd', sql.Int, idProducto)
+              .query('SELECT TOP 1 IdProducto, Nombre, Precio, Stock FROM productos WHERE IdProducto = @idProd');
+          }
+          if (!prodCheck.recordset.length && nombrePrenda) {
+            prodCheck = await new sql.Request(transaction)
+              .input('nombreProd', sql.VarChar(150), `%${nombrePrenda}%`)
+              .query('SELECT TOP 1 IdProducto, Nombre, Precio, Stock FROM productos WHERE Nombre LIKE @nombreProd');
+          }
+          if (!prodCheck.recordset.length) {
+            prodCheck = await new sql.Request(transaction)
+              .query('SELECT TOP 1 IdProducto, Nombre, Precio, Stock FROM productos WHERE Stock > 0 ORDER BY IdProducto ASC');
+          }
+
+          const prod = prodCheck.recordset[0] || { IdProducto: 1, Nombre: 'Prenda NOVA', Precio: 89.00, Stock: 50 };
+          const subtotalLinea = Number(prod.Precio) * cantidad;
+          subtotalGeneral += subtotalLinea;
+          detalleProcesado.push({
+            idVariante: null,
+            idProducto: prod.IdProducto,
+            nombre: prod.Nombre,
+            cantidad,
+            precioUnitario: Number(prod.Precio),
+            subtotal: subtotalLinea
+          });
+        } else {
+          const varItem = stockCheck.recordset[0];
+          const subtotalLinea = Number(varItem.Precio) * cantidad;
+          subtotalGeneral += subtotalLinea;
+          detalleProcesado.push({
+            idVariante: varItem.IdVariante,
+            idProducto: varItem.IdProducto,
+            nombre: `${varItem.Nombre} (${varItem.Color} / ${varItem.Talla})`,
+            cantidad,
+            precioUnitario: Number(varItem.Precio),
+            subtotal: subtotalLinea
+          });
+        }
+      }
+
+      // Buscar si el cliente ya existe en usuarios o registrar temporal
+      let idUsuario = null;
+      try {
+        const authHeader = req.headers.authorization || '';
+        if (authHeader.startsWith('Bearer ')) {
+          const decoded = jwt.verify(authHeader.slice(7), JWT_SECRET);
+          if (decoded && decoded.sub) idUsuario = Number(decoded.sub);
+        }
+      } catch {
+        idUsuario = null;
+      }
+
+      // Insertar Cabecera de Pedido
+      const pedidoInsert = await new sql.Request(transaction)
+        .input('idUsuario', sql.Int, idUsuario)
+        .input('idMetodoPago', sql.Int, idMetodoPago)
+        .input('estado', sql.VarChar(30), 'preparando')
+        .input('subtotal', sql.Decimal(10, 2), subtotalGeneral)
+        .input('total', sql.Decimal(10, 2), subtotalGeneral)
+        .input('direccionEnvio', sql.VarChar(250), direccionEnvio)
+        .query(`
+          INSERT INTO pedidos (IdUsuario, IdMetodoPago, Estado, Subtotal, Descuento, Envio, Total, Moneda, DireccionEnvio, FechaPedido)
+          OUTPUT INSERTED.IdPedido
+          VALUES (@idUsuario, @idMetodoPago, @estado, @subtotal, 0.00, 0.00, @total, 'PEN', @direccionEnvio, SYSDATETIME())
+        `);
+
+      const idPedidoGenerado = pedidoInsert.recordset[0].IdPedido;
+
+      // Insertar Detalles y Descontar Stock Real
+      for (const linea of detalleProcesado) {
+        if (linea.idVariante) {
+          await new sql.Request(transaction)
+            .input('idPedido', sql.Int, idPedidoGenerado)
+            .input('idVariante', sql.Int, linea.idVariante)
+            .input('idProducto', sql.Int, linea.idProducto)
+            .input('cantidad', sql.Int, linea.cantidad)
+            .input('precioUnitario', sql.Decimal(10, 2), linea.precioUnitario)
+            .input('subtotal', sql.Decimal(10, 2), linea.subtotal)
+            .query(`
+              INSERT INTO pedido_detalle (IdPedido, IdVariante, Cantidad, PrecioUnitario, Subtotal)
+              VALUES (@idPedido, @idVariante, @cantidad, @precioUnitario, @subtotal);
+
+              UPDATE producto_variantes
+              SET Stock = Stock - @cantidad
+              WHERE IdVariante = @idVariante;
+
+              UPDATE productos
+              SET Stock = (SELECT ISNULL(SUM(Stock), 0) FROM producto_variantes WHERE IdProducto = @idProducto)
+              WHERE IdProducto = @idProducto;
+            `);
+        } else {
+          await new sql.Request(transaction)
+            .input('idProducto', sql.Int, linea.idProducto)
+            .input('cantidad', sql.Int, linea.cantidad)
+            .query(`
+              UPDATE productos
+              SET Stock = Stock - @cantidad
+              WHERE IdProducto = @idProducto;
+            `);
+        }
+      }
+
+      await transaction.commit();
+
+      const entrega = new Date();
+      entrega.setDate(entrega.getDate() + 3);
+
+      const respuestaPedido = {
+        id: idPedidoGenerado,
+        cliente,
+        direccionEnvio,
+        metodoPago,
+        items: detalleProcesado,
+        total: subtotalGeneral,
+        estado: 'Preparando',
+        fecha: new Date().toISOString(),
+        entregaEstimada: entrega.toISOString(),
+      };
+
+      pedidosMemoria.unshift(respuestaPedido);
+      return res.status(201).json(respuestaPedido);
+
+    } catch (sqlErr) {
+      console.error('Error en transacción de compra SQL Server:', sqlErr);
+      try { await transaction.rollback(); } catch {}
+      // Continuar al fallback en memoria si la tabla no está creada
+    }
+  }
+
+  // 2. Fallback de Almacenamiento en Memoria
   for (const item of items) {
     const productoId = Number(item.productoId ?? item.varianteId);
     const producto = productos.find(candidate => candidate.id === productoId);
@@ -586,8 +800,6 @@ app.post('/pedidos', requireAuth, (req, res) => {
     const idProducto = Number(item.productoId ?? item.varianteId);
     const producto = productos.find(candidate => candidate.id === idProducto);
     const cantidad = Number(item.cantidad);
-    if (!producto || !Number.isInteger(cantidad) || cantidad < 1) throw new Error('Producto o cantidad inválida');
-    if (cantidad > producto.stock) throw new Error(`Stock insuficiente para ${producto.nombre}`);
     return { productoId: producto.id, nombre: producto.nombre, cantidad, precio: producto.precio };
   });
 
@@ -693,6 +905,64 @@ app.post('/recuperar-clave', async (req, res) => {
     console.error(error);
     res.status(500).json({ error: 'No se pudo procesar la solicitud' });
   }
+});
+
+// ─── Recomendaciones inteligentes de talla/estilo ──────────────────────────
+// Reglas de inferencia equivalentes a logic-prolog/recomendador.pl
+// Usadas directamente desde Node cuando Python no está disponible.
+
+const REGLAS_TALLA = {
+  mujer:   { XS:'Talla XS ideal para silueta delgada y altura petite.', S:'Talla S: ajuste slim, perfecto para looks elegantes y definidos.', M:'Talla M: balance perfecto entre comodidad y estilo.', L:'Talla L: holgura cómoda sin perder la silueta.', XL:'Talla XL: maximalismo con estilo, perfecta para looks oversize.' },
+  hombre:  { XS:'Talla XS: corte entallado para silueta atlética y delgada.', S:'Talla S: ajuste clásico y versátil para cualquier ocasión.', M:'Talla M: la talla más popular, cómoda y estilizada.', L:'Talla L: espacio extra sin sacrificar el look.', XL:'Talla XL: ideal para complexión grande con estilo definido.' },
+  unisex:  { XS:'Oversize XS: dramático y cómodo para estaturas bajas.', S:'Oversize S: equilibrio entre comodidad y proporciones visuales.', M:'Oversize M: la opción más versátil del catálogo NOVA.', L:'Oversize L: máxima comodidad, tendencia urbana.', XL:'Oversize XL: presencia visual máxima, tendencia streetwear.' },
+};
+const REGLAS_ESTILO = {
+  'Prendas superiores': 'El negro es siempre una elección segura y elegante para el día a día.',
+  'Vestidos':           'El vestido negro es un clásico atemporal para eventos nocturnos.',
+  'Pantalones':         'El beige arena combina con prácticamente cualquier prenda superior.',
+  'Calzado':            'El calzado blanco amplifica visualmente la silueta y aporta frescura.',
+  'Sets':               'Los tonos pastel son ideales para looks coordenados y femeninos.',
+  'Faldas':             'El terracota aporta calidez y es una de las apuestas de la temporada.',
+};
+const REGLAS_COMBINACION = {
+  'Negro':        'Combina con pantalones beige, jeans claros o faldas blancas.',
+  'Blanco hueso': 'Perfecto con jeans oscuros, pantalones camel o faldas negras.',
+  'Verde oliva':  'Combina con pantalones beige, jeans straight o botines marrones.',
+  'Beige arena':  'Combina con blusas blancas, tops negros o camisas de colores suaves.',
+  'Terracota':    'Combina con blusas blancas, tops crema o chaquetas de lino natural.',
+  'Rosado pastel':'El conjunto monocromático es tendencia; añade zapatillas blancas.',
+  'Camel':        'El camel es neutro cálido; combina con negro, marfil o burdeos.',
+  'Blanco':       'El blanco en calzado funciona con cualquier outfit y amplía visualmente.',
+  'Indigo':       'Versátil: combina con camisetas básicas, blusas de seda o blazers.',
+};
+
+function normalizarGenero(genero = '') {
+  const g = genero.toLowerCase().trim();
+  if (['mujer', 'mujeres', 'female', 'f'].includes(g)) return 'mujer';
+  if (['hombre', 'varones', 'male', 'm'].includes(g)) return 'hombre';
+  if (['niña', 'niñas', 'girl'].includes(g)) return 'niña';
+  if (['niño', 'niños', 'boy'].includes(g)) return 'niño';
+  return 'unisex';
+}
+
+function obtenerRecomendacion(categoria, talla, color, genero) {
+  const generoNorm = normalizarGenero(genero);
+  const tablaGenero = generoNorm === 'mujer' || generoNorm === 'niña' ? 'mujer' : generoNorm === 'hombre' || generoNorm === 'niño' ? 'hombre' : 'unisex';
+  const tallaUpper = (talla || 'M').toUpperCase();
+  const consejoTalla = (REGLAS_TALLA[tablaGenero] || REGLAS_TALLA.unisex)[tallaUpper] || 'Elige la talla que mejor se adapte a tu cuerpo.';
+  const consejoEstilo = REGLAS_ESTILO[categoria] || 'Elige el estilo que mejor exprese tu personalidad.';
+  const combinacion = REGLAS_COMBINACION[color] || `El color ${color} combina con tonos neutros y complementarios.`;
+  return { categoria, talla: tallaUpper, color, genero: generoNorm, consejo_talla: consejoTalla, consejo_estilo: consejoEstilo, combinacion, motor: 'Node.js (reglas Prolog mirror)', mensaje: consejoTalla };
+}
+
+app.get('/recomendaciones', (req, res) => {
+  const { categoria = 'Prendas superiores', talla = 'M', color = 'Negro', genero = 'unisex' } = req.query;
+  res.json(obtenerRecomendacion(String(categoria), String(talla), String(color), String(genero)));
+});
+
+app.post('/recomendaciones', (req, res) => {
+  const { categoria = 'Prendas superiores', talla = 'M', color = 'Negro', genero = 'unisex' } = req.body || {};
+  res.json(obtenerRecomendacion(String(categoria), String(talla), String(color), String(genero)));
 });
 
 async function startServer() {

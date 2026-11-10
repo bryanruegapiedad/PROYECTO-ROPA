@@ -1,11 +1,20 @@
 node_modules/
+backend-node/node_modules/
+frontend/node_modules/
 .env
 .env.*
 !.env.example
+backend-node/.env
 
 dist/
+frontend/dist/
 .angular/
+frontend/.angular/
 .cache/
+
+__pycache__/
+backend-python/__pycache__/
+*.pyc
 
 .vscode/
 .idea/

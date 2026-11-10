@@ -1,49 +1,38 @@
-# PROYECTO-ROPA
+# PROYECTO TIENDA DE ROPA (NOVA STUDIO)
 
-## Estructura de la presentación
+Sistema de gestión de ventas y comercio electrónico de moda con arquitectura de microservicios e inferencia lógica.
 
-Esta versión del proyecto está enfocada en la entrega de la semana actual, con el siguiente enfoque tecnológico:
+---
 
-- Scala
-- Prolog
-- Angular (incluido como interfaz del sistema)
-
-> Para esta etapa no se incluye Python; se trabajará en una próxima versión.
-
-### Tabla de avance
-
-| Semana | Entrega | Tecnologías |
-|--------|---------|------------|
-| Semana 9-10 | Avance 1 | Scala + Prolog + Angular |
-
-### Estructura del proyecto
+## Estructura del Proyecto
 
 ```text
-PROYECTO-ROPA/
-├── backend-scala/            # Backend principal en Scala
-│   ├── src/
-│   ├── project/
-│   └── build.sbt
-├── proyecto/                 # Frontend en Angular
-│   ├── src/
-│   ├── angular.json
-│   ├── package.json
-│   └── tsconfig.json
-├── services/                 # Servicios complementarios
-├── backend/                  # Base de datos y recursos de apoyo
-│   ├── database-TiendaRopa.sql
-│   ├── migracion-ecommerce.sql
-│   └── server.js
-├── README.md
-└── .gitignore
+├── frontend/          <-- Aplicación web SPA en Angular 21 (HTML, SCSS, TypeScript)
+├── backend-node/      <-- API REST en Node.js / Express con conexión a SQL Server
+├── backend-python/    <-- Orquestador e Integrador Flask (puerto 8083)
+├── logic-prolog/      <-- Base de conocimiento y reglas de inferencia Prolog (.pl)
+└── backend-scala/     <-- Motor de procesamiento analítico y catálogo en Scala (build.sbt)
 ```
 
-### Descripción breve
+---
 
-- La lógica de negocio y la API principal se implementan en Scala.
-- El razonamiento y la parte lógica declarativa se trabaja con Prolog.
-- Angular se integra como la capa visual para la aplicación y la experiencia del usuario.
+## Puertos y Servicios Activos
 
-### Observación final
+| Componente | Carpeta | Puerto | Función Principal |
+|---|---|:---:|---|
+| **Frontend Web** | `frontend/` | `4200` | Catálogo de prendas, carrito, checkout y detalle de producto |
+| **Backend Node.js** | `backend-node/` | `8082` | Gestión transaccional de órdenes, usuarios y SQL Server |
+| **Integrador Python** | `backend-python/` | `8083` | Orquestador de inferencia lógica de tallas y estilos |
+| **Lógica Prolog** | `logic-prolog/` | N/A | Reglas de compatibilidad de prendas y corte |
 
-La estructura queda corregida y preparada para la exposición, manteniendo el enfoque solicitado: Scala y Prolog como base del proyecto, con Angular incluido como tecnología de interfaz.
+---
+
+## Flujo de Compra Real y Persistencia
+
+1. **Validación:** El cliente completa sus datos en el checkout (nombre, teléfono, dirección, pago).
+2. **Recomendación Inteligente:** El panel interactivo consulta sugerencias automáticas de tallas y estilo basadas en reglas de inferencia.
+3. **Transacción en SQL Server:** Al confirmar la compra:
+   - Se crea el registro en la tabla `dbo.pedidos`.
+   - Se insertan las líneas en `dbo.pedido_detalle`.
+   - Se descuenta automáticamente el stock en `dbo.producto_variantes` y `dbo.productos`.
+4. **Confirmación:** La pantalla muestra el número de orden generado, los detalles de entrega y vacía automáticamente el carrito.
