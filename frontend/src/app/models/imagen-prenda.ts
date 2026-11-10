@@ -51,22 +51,31 @@ export function imagenDePrenda(producto: Producto, color = producto.color): stri
 }
 
 export function normalizarImagenesProducto(producto: Producto): Producto {
-  const variantes = producto.variantes?.map(variante => ({
-    ...variante,
-    imagen: imagenDePrenda(producto, variante.color),
-  }));
-  const imagenPrincipal = imagenDePrenda(producto);
-  const colores = [...new Set(variantes?.map(variante => variante.color) || producto.colores || [producto.color])];
+  const imgStr = String(producto.imagen || '').trim();
+  const tieneImagenValida = imgStr.length > 5;
+  const imagenPrincipal = tieneImagenValida ? imgStr : imagenDePrenda(producto);
+
+  const variantes = producto.variantes?.map(variante => {
+    const varImg = String(variante.imagen || '').trim();
+    return {
+      ...variante,
+      imagen: varImg.length > 5 ? varImg : imagenPrincipal,
+    };
+  });
+
+  const imagenes = (producto.imagenes && producto.imagenes.length) 
+    ? producto.imagenes 
+    : [{
+        url: imagenPrincipal,
+        alt: producto.nombre,
+        orden: 1,
+      }];
 
   return {
     ...producto,
     imagen: imagenPrincipal,
     imagenPrincipal,
     variantes,
-    imagenes: colores.map((color, orden) => ({
-      url: imagenDePrenda(producto, color),
-      alt: `${producto.nombre} ${color}`,
-      orden: orden + 1,
-    })),
+    imagenes,
   };
 }
