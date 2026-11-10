@@ -57,6 +57,13 @@ export class Tienda {
     return producto.imagenPrincipal || producto.imagen || fallback;
   }
 
+  onImgError(event: Event): void {
+    const target = event.target as HTMLImageElement;
+    if (target && !target.src.includes('polo-basico-negro')) {
+      target.src = 'assets/images/products/polos/polo-basico-negro.jpg';
+    }
+  }
+
   cerrarSesion(): void {
     this.auth.cerrarSesion();
     this.router.navigate(['/']);

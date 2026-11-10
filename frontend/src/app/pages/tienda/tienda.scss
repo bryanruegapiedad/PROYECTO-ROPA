@@ -228,8 +228,8 @@
 }
 
 .hero-image {
-  background: linear-gradient(180deg, rgba(28, 27, 26, 0.08), rgba(28, 27, 26, 0.18)), url('/assets/images/products/vestidos/vestido-casual-rojo.jpg') center/cover no-repeat;
-  min-height: 420px;
+  background: linear-gradient(180deg, rgba(28, 27, 26, 0.08), rgba(28, 27, 26, 0.25)), url('https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=1200&q=85') center 20%/cover no-repeat;
+  min-height: 440px;
   position: relative;
 }
 
@@ -402,8 +402,8 @@
 .product-image img {
   display: block;
   height: 100%;
-  object-fit: contain;
-  background: #fff;
+  object-fit: cover;
+  object-position: center 20%;
   width: 100%;
 }
 
