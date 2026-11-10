@@ -27,10 +27,10 @@
 
       <div class="hero-preview" *ngIf="prendasHero.length">
         <div class="editorial-card main">
-          <img [src]="imagen(prendasHero[0])" [alt]="prendasHero[0].nombre" />
+          <img [src]="imagen(prendasHero[0])" [alt]="prendasHero[0].nombre" (error)="onImgError($event)" />
         </div>
         <div class="editorial-card small">
-          <img [src]="imagen(prendasHero[1] || prendasHero[0])" [alt]="(prendasHero[1] || prendasHero[0]).nombre" />
+          <img [src]="imagen(prendasHero[1] || prendasHero[0])" [alt]="(prendasHero[1] || prendasHero[0]).nombre" (error)="onImgError($event)" />
         </div>
       </div>
     </div>
@@ -59,7 +59,7 @@
       <div class="masonry" *ngIf="productos.length">
         <article class="pin-card" *ngFor="let producto of productos">
           <div class="pin-image">
-            <img [src]="imagen(producto)" [alt]="producto.nombre" loading="lazy" />
+            <img [src]="imagen(producto)" [alt]="producto.nombre" (error)="onImgError($event)" loading="lazy" />
             <span class="tag" *ngIf="producto.stock < 10">Últimas</span>
             <button class="save-button" type="button" aria-label="Guardar producto">✦</button>
           </div>

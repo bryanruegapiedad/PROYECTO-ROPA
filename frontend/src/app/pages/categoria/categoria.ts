@@ -68,19 +68,22 @@ export class Categoria implements OnInit {
   imagen(producto: Producto): string {
     if (!producto) return 'assets/images/products/polos/polo-basico-negro.jpg';
 
+    // 1. Si el producto ya tiene su imagen de catálogo (Unsplash HD / CDN), usarla directamente
+    if (producto.imagen && producto.imagen.trim().startsWith('http')) {
+      return producto.imagen.trim();
+    }
+
     const nombre = (producto.nombre || '').toLowerCase();
     const color = (producto.color || '').toLowerCase();
 
-    // 1. Vestidos
+    // 2. Mapeos locales fieles por tipo de prenda
     if (nombre.includes('vestido')) {
       if (color.includes('azul')) return 'assets/images/products/vestidos/vestido-casual-azul.png';
       if (color.includes('negro')) return 'assets/images/products/vestidos/vestido-casual-negro.png';
       if (color.includes('rojo') || color.includes('coral')) return 'assets/images/products/vestidos/vestido-casual-rojo.jpg';
-      if (color.includes('beige') || color.includes('rosa')) return 'assets/images/products/vestidos/vestido-casual-beige.png';
-      return 'assets/images/products/vestidos/vestido-casual-azul.png';
+      return 'assets/images/products/vestidos/vestido-casual-beige.png';
     }
 
-    // 2. Pantalones, Jeans, Cargo y Jogger
     if (nombre.includes('jean') || nombre.includes('pantal') || nombre.includes('jogger') || nombre.includes('cargo')) {
       if (color.includes('negro')) return 'assets/images/products/pantalones/jean-clasico-negro.png';
       if (color.includes('beige') || color.includes('arena') || color.includes('caqui')) return 'assets/images/products/pantalones/jean-clasico-beige.png';
@@ -88,14 +91,11 @@ export class Categoria implements OnInit {
       return 'assets/images/products/pantalones/jean-clasico-azul.jpg';
     }
 
-    // 3. Poleras, Sudaderas y Hoodies
     if (nombre.includes('polera') || nombre.includes('sudadera') || nombre.includes('hoodie')) {
-      if (color.includes('gris') || color.includes('melange')) return 'assets/images/products/poleras/polera-basica-gris.png';
-      if (color.includes('lavanda') || color.includes('rosa') || color.includes('crema')) return 'assets/images/products/poleras/polera-basica-gris.png';
+      if (color.includes('gris') || color.includes('melange') || color.includes('crema')) return 'assets/images/products/poleras/polera-basica-gris.png';
       return 'assets/images/products/poleras/polera-basica-negra.png';
     }
 
-    // 4. Polos y Camisetas
     if (nombre.includes('polo') || nombre.includes('camiseta')) {
       if (color.includes('blanco') || color.includes('hueso')) return 'assets/images/products/polos/polo-basico-blanco.png';
       if (color.includes('azul') || color.includes('cielo')) return 'assets/images/products/polos/polo-basico-azul.jpg';
@@ -103,14 +103,12 @@ export class Categoria implements OnInit {
       return 'assets/images/products/polos/polo-basico-negro.jpg';
     }
 
-    // 5. Blusas y Tops
     if (nombre.includes('blusa') || nombre.includes('top')) {
       if (color.includes('blanco') || color.includes('marfil')) return 'assets/images/products/blusas/blusa-blanca.png';
       if (color.includes('rosa') || color.includes('pastel')) return 'assets/images/products/blusas/blusa-basica-rosa.png';
       return 'assets/images/products/blusas/blusa-basica-azul.jpg';
     }
 
-    // 6. Calzado, Zapatillas y Botines
     if (nombre.includes('zapat') || nombre.includes('calzado') || nombre.includes('botin')) {
       if (color.includes('negro') || color.includes('marr')) return 'assets/images/products/zapatos/zapatilla-casual-negra.png';
       if (color.includes('rosa')) return 'assets/images/products/zapatos/zapatilla-casual-rosa.png';
@@ -118,20 +116,15 @@ export class Categoria implements OnInit {
       return 'assets/images/products/zapatos/zapatilla-casual-blanca.png';
     }
 
-    // 7. Faldas, Blazers, Abrigos y Sets
-    if (nombre.includes('skirt') || nombre.includes('falda')) {
-      return 'assets/images/products/vestidos/vestido-casual-beige.png';
-    }
-    if (nombre.includes('blazer') || nombre.includes('coat') || nombre.includes('chaqueta') || nombre.includes('casaca')) {
-      if (color.includes('azul')) return 'assets/images/products/polos/polo-basico-azul.jpg';
-      return 'assets/images/products/poleras/sudadera-negra.png';
-    }
-    if (nombre.includes('set') || nombre.includes('conjunto') || nombre.includes('jardinera')) {
-      return 'assets/images/products/vestidos/vestido-casual-beige.png';
-    }
-
-    if (producto.imagen?.trim() && !producto.imagen.includes('unsplash.com')) return producto.imagen;
+    if (producto.imagen?.trim()) return producto.imagen;
     return 'assets/images/products/polos/polo-basico-negro.jpg';
+  }
+
+  onImgError(event: Event): void {
+    const target = event.target as HTMLImageElement;
+    if (target && !target.src.includes('polo-basico-negro')) {
+      target.src = 'assets/images/products/polos/polo-basico-negro.jpg';
+    }
   }
 
   cambiarCategoria(valor: string): void { 
