@@ -135,8 +135,15 @@ export class Dashboard implements OnInit {
   }
 
   imagenProducto(item: any): string {
-    if (item?.imagen && String(item.imagen).startsWith('http')) return item.imagen;
-    return imagenDePrenda(item);
+    const img = item?.imagen || item?.Imagen;
+    if (typeof img === 'string' && img.trim().length > 5) {
+      return img.trim();
+    }
+    const encontrado = this.productos.find(p => p.id === (item?.productoId || item?.id));
+    if (encontrado?.imagen && encontrado.imagen.trim().length > 5) {
+      return encontrado.imagen.trim();
+    }
+    return 'assets/images/products/polos/polo-basico-negro.jpg';
   }
 
   cambiarEstado(pedido: Pedido, nuevoEstado: string): void {

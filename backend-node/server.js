@@ -715,7 +715,7 @@ function inicializarPedidosSeed() {
 
 inicializarPedidosSeed();
 
-function calcularMetricas() {
+async function calcularMetricas() {
   const toDateKey = (d) => {
     const obj = new Date(d);
     return obj.getFullYear() + '-' + String(obj.getMonth() + 1).padStart(2, '0') + '-' + String(obj.getDate()).padStart(2, '0');
@@ -725,6 +725,7 @@ function calcularMetricas() {
   ayer.setDate(ayer.getDate() - 1);
   const ayerStr = toDateKey(ayer);
 
+  const listaProductos = await getProductos();
   const pedidosActivos = pedidosMemoria.filter(p => p.estado !== 'Cancelado');
   const totalVentas = pedidosActivos.reduce((sum, p) => sum + (Number(p.total) || 0), 0);
   const totalPedidos = pedidosActivos.length;
@@ -789,7 +790,7 @@ function calcularMetricas() {
     .sort((a, b) => b.unidadesVendidas - a.unidadesVendidas)
     .slice(0, 6)
     .map((item, idx) => {
-      const prodCatalogo = productos.find(p => p.id === item.productoId);
+      const prodCatalogo = listaProductos.find(p => p.id === item.productoId);
       const nombreLimpio = prodCatalogo ? prodCatalogo.nombre : item.nombre.replace(/\s*\([^)]*\)/, '');
       return {
         ...item,
@@ -827,8 +828,14 @@ app.get('/pedidos', requireAuth, (req, res) => {
   res.json(pedidosMemoria);
 });
 
-app.get('/pedidos/metricas', requireAuth, (req, res) => {
-  res.json(calcularMetricas());
+app.get('/pedidos/metricas', requireAuth, async (req, res) => {
+  try {
+    const metricas = await calcularMetricas();
+    res.json(metricas);
+  } catch (err) {
+    console.error('Error calculando métricas:', err);
+    res.status(500).json({ error: 'Error al calcular métricas' });
+  }
 });
 
 app.patch('/pedidos/:id/estado', requireAuth, (req, res) => {
@@ -865,15 +872,12 @@ app.get('/pedidos/rotacion', requireAuth, (req, res) => {
 
 app.post('/pedidos', async (req, res) => {
   const cliente = String(req.body.cliente || '').trim();
-  const direccionEnvio = String(req.body.direccionEnvio || '').trim();
+  const direccionEnvio = String(req.body.direccionEnvio || '').trim() || 'Venta presencial / Tienda';
   const metodoPago = String(req.body.metodoPago || 'Efectivo').trim() || 'Efectivo';
   const items = Array.isArray(req.body.items) ? req.body.items : [];
 
   if (!cliente || !items.length) {
     return res.status(400).json({ error: 'Indica el cliente y al menos un producto.' });
-  }
-  if (!direccionEnvio) {
-    return res.status(400).json({ error: 'Ingresa la dirección de entrega.' });
   }
 
   // 1. Si SQL Server está disponible con pool activo

@@ -1,32 +1,222 @@
-<div class="catalog-shell">
-  <header class="catalog-header"><div><p class="overline">NOVA STUDIO / CATÁLOGO</p><h1>Productos</h1><p>Administra tus prendas, variantes y disponibilidad.</p></div><button class="new-button" (click)="cancelar()">＋ Nueva prenda</button></header>
-  <section class="form-card">
-    <div class="form-title"><div><p class="overline">{{ editando ? 'ACTUALIZACIÓN' : 'INVENTARIO' }}</p><h2>{{ editando ? 'Editar prenda' : 'Añadir nueva prenda' }}</h2></div><span class="draft">● Guardado automático</span></div>
-    <div class="form-grid">
-      <label>Nombre de la prenda<input placeholder="Ej. Blazer oversize" [(ngModel)]="producto.nombre"></label>
-      <label>SKU<input placeholder="Ej. NOV-BLZ-001" [(ngModel)]="producto.sku"></label>
-      <label>Categoría<select [(ngModel)]="producto.categoria"><option>Vestidos</option><option>Prendas superiores</option><option>Pantalones</option><option>Accesorios</option><option>Novedades</option></select></label>
-      <label>Color<input placeholder="Ej. Negro carbón" [(ngModel)]="producto.color"></label>
-      <label>Talla<select [(ngModel)]="producto.talla"><option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>Única</option></select></label>
-      <label>Precio (S/)<input type="number" min="0" [(ngModel)]="producto.precio"></label>
-      <label>Unidades<input type="number" min="0" [(ngModel)]="producto.stock"></label>
-      <label class="wide">URL de imagen<input placeholder="https://..." [(ngModel)]="producto.imagen"></label>
+<div class="layout">
+  <!-- Sidebar Lateral (Idéntica al Dashboard) -->
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark">N</span>
+      <div>
+        <strong>NOVA</strong>
+        <small>STUDIO</small>
+      </div>
     </div>
-    <div class="form-actions"><button class="save-button" (click)="guardar()" [disabled]="!producto.nombre || !producto.sku">{{ editando ? 'Guardar cambios' : 'Añadir al catálogo' }} <span>→</span></button><button class="cancel-button" *ngIf="editando" (click)="cancelar()">Cancelar</button></div>
-  </section>
-  <section class="catalog-card">  <div class="catalog-toolbar"><div><h2>Catálogo de prendas <span>{{ productosFiltrados.length }}</span></h2><p>Visualiza y gestiona todos los artículos.</p></div><div class="toolbar-actions"><div class="search">⌕ <input [(ngModel)]="terminoBusqueda" placeholder="Buscar producto..." aria-label="Buscar producto" /></div><select [(ngModel)]="categoriaFiltro" aria-label="Filtrar por categoría"><option *ngFor="let categoria of categorias">{{ categoria }}</option></select></div></div>
-    <div class="product-gallery" *ngIf="productosFiltrados.length">
-      <article class="fashion-card" *ngFor="let p of productosFiltrados">
-        <div class="fashion-image" [style.background-image]="'url(' + imagenProducto(p) + ')'">
-          <span class="new-tag" *ngIf="p.id > 7">NUEVO</span>
-          <button class="heart" type="button" aria-label="Favorito">♡</button>
-          <div class="quick-actions"><button type="button" (click)="editar(p)">Editar prenda</button><button type="button" (click)="eliminar(p.id)">Eliminar</button></div>
+
+    <p class="menu-label">PANEL DE CONTROL</p>
+    <nav>
+      <button type="button" (click)="irDashboard()"><span>▦</span>Resumen & Métricas</button>
+      <button class="active" type="button"><span>◇</span>Catálogo</button>
+      <button type="button" (click)="irPedidos()"><span>◌</span>Pedidos</button>
+      <button type="button" class="btn-store-nav" (click)="irTienda()"><span>🛍</span>Ir a Tienda</button>
+    </nav>
+
+    <p class="menu-label secondary">ACCESOS DIRECTOS</p>
+    <nav>
+      <button type="button" (click)="cargar()"><span>↻</span>Sincronizar</button>
+      <button type="button" (click)="cerrarSesion()"><span>✕</span>Cerrar Sesión</button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span class="status-dot"></span>
+      <div>
+        <strong>Rol: Administrador</strong>
+        <small>Gestión de Catálogo</small>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Contenido Principal -->
+  <main class="contenido">
+    <!-- Topbar Superior -->
+    <header class="topbar">
+      <div>
+        <p class="overline">{{ fechaActual | date:'EEEE, dd MMMM yyyy':'':'es-PE' | uppercase }}</p>
+        <h1>Catálogo de Prendas <span>✦</span></h1>
+        <p class="subtitle">Administra los modelos, variantes de stock, precios y fotos del catálogo oficial.</p>
+      </div>
+      <div class="top-actions">
+        <button class="btn-pill-store" type="button" (click)="irTienda()" title="Ver la tienda de clientes">
+          <span>🛍</span> Ver Tienda
+        </button>
+        <button class="btn-refresh" type="button" (click)="cargar()" title="Actualizar catálogo">
+          ↻
+        </button>
+        <div class="avatar" title="Administrador de Sistema">AD</div>
+      </div>
+    </header>
+
+    <!-- Formulario de Creación / Edición -->
+    <section class="panel form-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="overline">{{ editando ? 'ACTUALIZAR PRENDA' : 'NUEVO INGRESO AL INVENTARIO' }}</p>
+          <h3>{{ editando ? 'Editar Prenda' : 'Añadir Nueva Prenda a la Colección' }}</h3>
         </div>
-        <div class="fashion-info"><div><p>{{ p.categoria }}</p><h3>{{ p.nombre }}</h3><small>{{ p.talla }} · {{ p.color }}</small></div><strong>S/ {{ p.precio | number:'1.2-2' }}</strong></div>
-        <div class="fashion-footer"><span [class.warning]="p.stock < 10"><i></i>{{ p.stock }} disponibles</span><span>{{ p.sku }}</span></div>
-      </article>
-    </div>
-    <p class="empty" *ngIf="!productosFiltrados.length">No hay prendas para mostrar.</p>
-    <div class="table-wrap"><table><thead><tr><th>PRENDA</th><th>CATEGORÍA</th><th>VARIANTE</th><th>PRECIO</th><th>STOCK</th><th>ESTADO</th><th></th></tr></thead><tbody><tr *ngFor="let p of productosFiltrados"><td><div class="item-cell"><div class="item-image" [style.background-image]="'url(' + imagenProducto(p) + ')'"></div><div><strong>{{ p.nombre }}</strong><small>{{ p.sku }}</small></div></div></td><td>{{ p.categoria }}</td><td>{{ p.talla }} / {{ p.color }}</td><td class="price">S/ {{ p.precio | number:'1.2-2' }}</td><td><span [class.low-stock]="p.stock < 10">{{ p.stock }} uds.</span></td><td><span class="status" [class.inactive]="!p.activo">{{ p.activo ? 'Activo' : 'Inactivo' }}</span></td><td><div class="actions"><button (click)="editar(p)" aria-label="Editar">✎</button><button (click)="eliminar(p.id)" aria-label="Eliminar">×</button></div></td></tr></tbody></table></div>
-  </section>
+        <button class="btn-cancel" *ngIf="editando" type="button" (click)="cancelar()">✕ Cancelar edición</button>
+      </div>
+
+      <div class="form-grid">
+        <label>
+          Nombre de la prenda
+          <input placeholder="Ej. Blazer oversize satén" [(ngModel)]="producto.nombre">
+        </label>
+        <label>
+          Código SKU
+          <input placeholder="Ej. NOV-BLZ-001" [(ngModel)]="producto.sku">
+        </label>
+        <label>
+          Categoría
+          <select [(ngModel)]="producto.categoria">
+            <option>Prendas superiores</option>
+            <option>Vestidos</option>
+            <option>Pantalones</option>
+            <option>Faldas</option>
+            <option>Calzado</option>
+            <option>Sets</option>
+            <option>Novedades</option>
+          </select>
+        </label>
+        <label>
+          Color
+          <input placeholder="Ej. Negro carbón" [(ngModel)]="producto.color">
+        </label>
+        <label>
+          Talla
+          <select [(ngModel)]="producto.talla">
+            <option>XS</option>
+            <option>S</option>
+            <option>M</option>
+            <option>L</option>
+            <option>XL</option>
+            <option>32</option>
+            <option>34</option>
+            <option>39</option>
+            <option>42</option>
+            <option>Única</option>
+          </select>
+        </label>
+        <label>
+          Precio de venta (S/)
+          <input type="number" min="0" step="0.5" [(ngModel)]="producto.precio">
+        </label>
+        <label>
+          Unidades en stock
+          <input type="number" min="0" [(ngModel)]="producto.stock">
+        </label>
+        <label class="wide-field">
+          URL de imagen (Enlace directo o Unsplash)
+          <input placeholder="https://..." [(ngModel)]="producto.imagen">
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-primary-action" type="button" (click)="guardar()" [disabled]="!producto.nombre || !producto.sku">
+          {{ editando ? 'Guardar Cambios' : 'Añadir Prenda al Catálogo' }} <span>→</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Galería y Lista de Catálogo -->
+    <section class="panel catalog-panel">
+      <div class="catalog-toolbar">
+        <div>
+          <p class="overline">INVENTARIO REGISTRADO</p>
+          <h3>Prendas Disponibles <span class="count-badge">{{ productosFiltrados.length }}</span></h3>
+          <p class="panel-desc">Visualiza y gestiona las fotos oficiales y existencias en almacén.</p>
+        </div>
+        <div class="toolbar-actions">
+          <div class="search-box">
+            <span>⌕</span>
+            <input [(ngModel)]="terminoBusqueda" placeholder="Buscar por nombre, SKU o color...">
+          </div>
+          <select class="category-select" [(ngModel)]="categoriaFiltro">
+            <option *ngFor="let cat of categorias">{{ cat }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Tarjetas Visuales con Fotos -->
+      <div class="product-gallery" *ngIf="productosFiltrados.length; else noProducts">
+        <article class="fashion-card" *ngFor="let p of productosFiltrados">
+          <div class="fashion-image" [style.background-image]="'url(' + imagenProducto(p) + ')'">
+            <span class="stock-pill" [class.low]="p.stock < 10">{{ p.stock }} en stock</span>
+            <div class="card-overlay-actions">
+              <button class="btn-card-edit" type="button" (click)="editar(p)">✎ Editar</button>
+              <button class="btn-card-delete" type="button" (click)="eliminar(p.id)">✕</button>
+            </div>
+          </div>
+          <div class="fashion-info">
+            <div class="fashion-meta">
+              <span class="category-tag">{{ p.categoria }}</span>
+              <strong class="item-name">{{ p.nombre }}</strong>
+              <small class="item-sub">{{ p.talla }} · {{ p.color }} · SKU: {{ p.sku }}</small>
+            </div>
+            <strong class="item-price">{{ p.precio | currency:'PEN':'symbol':'1.2-2' }}</strong>
+          </div>
+        </article>
+      </div>
+
+      <ng-template #noProducts>
+        <div class="empty-state">
+          <p>No se encontraron prendas que coincidan con la búsqueda.</p>
+        </div>
+      </ng-template>
+
+      <!-- Tabla Completa de Gestión -->
+      <div class="table-wrap" *ngIf="productosFiltrados.length">
+        <table class="inventory-table">
+          <thead>
+            <tr>
+              <th>PRENDA</th>
+              <th>CATEGORÍA</th>
+              <th>VARIANTE</th>
+              <th>PRECIO</th>
+              <th>STOCK</th>
+              <th>ESTADO</th>
+              <th>ACCIONES</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of productosFiltrados">
+              <td>
+                <div class="table-item-cell">
+                  <div class="table-thumb" [style.background-image]="'url(' + imagenProducto(p) + ')'"></div>
+                  <div>
+                    <strong>{{ p.nombre }}</strong>
+                    <small>{{ p.sku }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>{{ p.categoria }}</td>
+              <td>{{ p.talla }} · {{ p.color }}</td>
+              <td class="col-price"><strong>{{ p.precio | currency:'PEN':'symbol':'1.2-2' }}</strong></td>
+              <td>
+                <span class="stock-badge" [class.low]="p.stock < 10">
+                  {{ p.stock }} uds.
+                </span>
+              </td>
+              <td>
+                <span class="status-indicator" [class.inactive]="!p.activo">
+                  {{ p.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>
+                <div class="row-actions">
+                  <button class="btn-row-action" (click)="editar(p)" title="Editar prenda">✎</button>
+                  <button class="btn-row-action delete" (click)="eliminar(p.id)" title="Eliminar prenda">✕</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
 </div>

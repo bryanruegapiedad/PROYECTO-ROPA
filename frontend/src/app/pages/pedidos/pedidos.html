@@ -1,48 +1,258 @@
-<div class="orders-page">
+<div class="layout">
+  <!-- Sidebar Lateral (Idéntica al Dashboard) -->
   <aside class="sidebar">
-    <div class="brand"><span class="brand-mark">N</span><div><strong>NOVA</strong><small>STUDIO</small></div></div>
-    <p class="menu-label">GESTIÓN</p>
+    <div class="brand">
+      <span class="brand-mark">N</span>
+      <div>
+        <strong>NOVA</strong>
+        <small>STUDIO</small>
+      </div>
+    </div>
+
+    <p class="menu-label">PANEL DE CONTROL</p>
     <nav>
-      <button type="button" (click)="irDashboard()"><span>▦</span>Resumen</button>
+      <button type="button" (click)="irDashboard()"><span>▦</span>Resumen & Métricas</button>
       <button type="button" (click)="irProductos()"><span>◇</span>Catálogo</button>
       <button class="active" type="button"><span>◌</span>Pedidos</button>
+      <button type="button" class="btn-store-nav" (click)="irTienda()"><span>🛍</span>Ir a Tienda</button>
     </nav>
-    <div class="sidebar-footer"><span class="status-dot"></span><span>Todos los sistemas<br><small>operativos</small></span></div>
+
+    <p class="menu-label secondary">ACCESOS DIRECTOS</p>
+    <nav>
+      <button type="button" (click)="cargar()"><span>↻</span>Sincronizar</button>
+      <button type="button" (click)="cerrarSesion()"><span>✕</span>Cerrar Sesión</button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span class="status-dot"></span>
+      <div>
+        <strong>Rol: Administrador</strong>
+        <small>Gestión de Pedidos</small>
+      </div>
+    </div>
   </aside>
 
-  <main class="content">
+  <!-- Contenido Principal -->
+  <main class="contenido">
+    <!-- Topbar Superior -->
     <header class="topbar">
-      <div><p class="overline">OPERACIÓN DE TIENDA</p><h1>Pedidos y rotación</h1><p class="subtitle">Controla qué se vende más y cuándo llegará cada pedido.</p></div>
-      <div class="avatar">AD</div>
+      <div>
+        <p class="overline">{{ fechaActual | date:'EEEE, dd MMMM yyyy':'':'es-PE' | uppercase }}</p>
+        <h1>Control de Pedidos y Rotación <span>✦</span></h1>
+        <p class="subtitle">Registra ventas presenciales, analiza la rotación de prendas y gestiona entregas.</p>
+      </div>
+      <div class="top-actions">
+        <button class="btn-pill-store" type="button" (click)="irTienda()" title="Ver la tienda de clientes">
+          <span>🛍</span> Ver Tienda
+        </button>
+        <button class="btn-refresh" type="button" (click)="cargar()" title="Actualizar pedidos">
+          ↻
+        </button>
+        <div class="avatar" title="Administrador de Sistema">AD</div>
+      </div>
     </header>
 
+    <!-- Fila de Estadísticas Rápidas -->
     <section class="summary-grid">
-      <article class="summary-card accent"><span class="summary-icon">↗</span><p>PRODUCTO CON MÁS ROTACIÓN</p><strong>{{ productoLider?.nombre || 'Sin ventas aún' }}</strong><small>{{ productoLider?.unidadesVendidas || 0 }} unidades vendidas</small></article>
-      <article class="summary-card"><span class="summary-icon">◌</span><p>PEDIDOS REGISTRADOS</p><strong>{{ pedidos.length }}</strong><small>Historial de la sesión</small></article>
-      <article class="summary-card"><span class="summary-icon">⌁</span><p>ENTREGA ESTÁNDAR</p><strong>3 días</strong><small>Calculada automáticamente</small></article>
-    </section>
-
-    <section class="work-grid">
-      <article class="panel order-form">
-        <div class="panel-heading"><div><p class="overline">NUEVO PEDIDO</p><h2>Registrar venta</h2></div><span class="order-mark">+</span></div>
-        @if (error) { <p class="feedback error">{{ error }}</p> }
-        @if (mensaje) { <p class="feedback success">{{ mensaje }}</p> }
-        <label for="cliente">CLIENTE</label>
-        <input id="cliente" type="text" [(ngModel)]="cliente" placeholder="Nombre del cliente">
-        <div class="add-row">
-          <div><label for="producto">PRODUCTO</label><select id="producto" [(ngModel)]="productoSeleccionadoId"><option [ngValue]="0">Selecciona un producto</option><option *ngFor="let producto of productos" [ngValue]="producto.id" [disabled]="producto.stock === 0">{{ producto.nombre }} · {{ producto.stock }} disponibles</option></select></div>
-          <div class="quantity"><label for="cantidad">CANT.</label><input id="cantidad" type="number" min="1" [(ngModel)]="cantidad"></div>
-          <button class="add-button" type="button" (click)="agregarLinea()" title="Agregar producto">+</button>
-        </div>
-        <div class="lines" *ngIf="lineas.length; else noLines"><div class="line" *ngFor="let linea of lineas"><div><strong>{{ nombreProducto(linea.productoId) }}</strong><small>{{ linea.cantidad }} × {{ precioProducto(linea.productoId) | currency:'PEN':'symbol':'1.2-2' }}</small></div><strong>{{ linea.cantidad * precioProducto(linea.productoId) | currency:'PEN':'symbol':'1.2-2' }}</strong><button type="button" (click)="quitarLinea(linea.productoId)" aria-label="Quitar producto">×</button></div></div>
-        <ng-template #noLines><p class="empty">Agrega productos para preparar el pedido.</p></ng-template>
-        <div class="total"><span>Total estimado</span><strong>{{ totalPedido | currency:'PEN':'symbol':'1.2-2' }}</strong></div>
-        <button class="primary-button" type="button" [disabled]="guardando" (click)="crearPedido()">{{ guardando ? 'Guardando...' : 'Crear pedido' }} <span>↗</span></button>
+      <article class="stat-card">
+        <div class="stat-icon peach">↗</div>
+        <p>PRENDA LÍDER EN ROTACIÓN</p>
+        <strong>{{ productoLider?.nombre || 'Sin ventas registradas' }}</strong>
+        <span class="stat-sub">{{ productoLider?.unidadesVendidas || 0 }} unidades despachadas</span>
       </article>
 
-      <article class="panel rotation-panel"><div class="panel-heading"><div><p class="overline">ANÁLISIS DE VENTAS</p><h2>Mayor rotación</h2></div><span class="period">Histórico</span></div><p class="panel-note">Unidades vendidas por producto. Se actualiza con cada pedido.</p><div class="rotation-list"><div class="rotation-row" *ngFor="let item of rotacion; let i = index"><div class="rank">{{ i + 1 | number:'2.0-0' }}</div><div class="rotation-info"><div><strong>{{ item.nombre }}</strong><span>{{ item.unidadesVendidas }} uds.</span></div><div class="track"><i [style.width.%]="porcentajeRotacion(item)"></i></div></div></div></div></article>
+      <article class="stat-card">
+        <div class="stat-icon mint">◌</div>
+        <p>PEDIDOS REGISTRADOS</p>
+        <strong>{{ pedidos.length }} órdenes</strong>
+        <span class="stat-sub">Historial activo de la boutique</span>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-icon lavender">⌁</div>
+        <p>PLAZO DE ENTREGA</p>
+        <strong>3 días hábiles</strong>
+        <span class="stat-sub">Estándar calculado automáticamente</span>
+      </article>
     </section>
 
-    <section class="panel history"><div class="panel-heading"><div><p class="overline">SEGUIMIENTO</p><h2>Pedidos recientes</h2></div></div><div class="table-wrap"><table><thead><tr><th>PEDIDO</th><th>CLIENTE</th><th>PRODUCTOS</th><th>TOTAL</th><th>ENTREGA ESTIMADA</th><th>ESTADO</th></tr></thead><tbody><tr *ngFor="let pedido of pedidos"><td class="id">#{{ pedido.id | number:'3.0-0' }}</td><td><strong>{{ pedido.cliente }}</strong></td><td>{{ pedido.items.length }} artículos</td><td class="total-cell">{{ pedido.total | currency:'PEN':'symbol':'1.2-2' }}</td><td>{{ fecha(pedido.entregaEstimada) }}</td><td><span class="status">{{ pedido.estado }}</span></td></tr></tbody></table></div><p class="empty" *ngIf="!cargando && !pedidos.length">Todavía no hay pedidos registrados.</p></section>
+    <!-- Grid de Trabajo (Formulario de Venta + Panel de Rotación) -->
+    <section class="work-grid">
+      <!-- Formulario para Registrar Venta -->
+      <article class="panel order-form">
+        <div class="panel-heading">
+          <div>
+            <p class="overline">NUEVA TRANSACCIÓN</p>
+            <h3>Registrar Pedido / Venta</h3>
+          </div>
+          <span class="form-badge">+ Venta</span>
+        </div>
+
+        <div class="feedback-msg error" *ngIf="error">
+          <span>✕</span> {{ error }}
+        </div>
+        <div class="feedback-msg success" *ngIf="mensaje">
+          <span>✓</span> {{ mensaje }}
+        </div>
+
+        <div class="form-fields">
+          <label>
+            Nombre del cliente
+            <input type="text" [(ngModel)]="cliente" placeholder="Ej. Camila Fernández">
+          </label>
+
+          <label>
+            Dirección de entrega
+            <input type="text" [(ngModel)]="direccionEnvio" placeholder="Ej. Atención en Tienda o Av. Larco 450">
+          </label>
+
+          <label>
+            Método de pago
+            <select [(ngModel)]="metodoPago">
+              <option>Efectivo</option>
+              <option>Tarjeta de Crédito</option>
+              <option>Tarjeta de Débito</option>
+              <option>Yape / Plin</option>
+              <option>Transferencia</option>
+            </select>
+          </label>
+
+          <!-- Fila de Agregar Prenda -->
+          <div class="add-product-row">
+            <div class="prod-select-wrap">
+              <label>Seleccionar prenda del catálogo</label>
+              <select [(ngModel)]="productoSeleccionadoId">
+                <option [ngValue]="0">Selecciona una prenda...</option>
+                <option *ngFor="let prod of productos" [ngValue]="prod.id" [disabled]="prod.stock === 0">
+                  {{ prod.nombre }} · {{ prod.precio | currency:'PEN':'symbol':'1.2-2' }} ({{ prod.stock }} disp.)
+                </option>
+              </select>
+            </div>
+            <div class="prod-qty-wrap">
+              <label>Cant.</label>
+              <input type="number" min="1" [(ngModel)]="cantidad">
+            </div>
+            <button class="btn-add-line" type="button" (click)="agregarLinea()" title="Añadir prenda">+</button>
+          </div>
+        </div>
+
+        <!-- Líneas del Pedido -->
+        <div class="order-lines-box" *ngIf="lineas.length; else noLines">
+          <div class="order-line-item" *ngFor="let linea of lineas">
+            <div class="line-info">
+              <strong>{{ nombreProducto(linea.productoId) }}</strong>
+              <small>{{ linea.cantidad }} × {{ precioProducto(linea.productoId) | currency:'PEN':'symbol':'1.2-2' }}</small>
+            </div>
+            <strong class="line-subtotal">
+              {{ (linea.cantidad * precioProducto(linea.productoId)) | currency:'PEN':'symbol':'1.2-2' }}
+            </strong>
+            <button class="btn-remove-line" type="button" (click)="quitarLinea(linea.productoId)" title="Quitar">✕</button>
+          </div>
+        </div>
+
+        <ng-template #noLines>
+          <div class="empty-lines">
+            <p>Selecciona prendas arriba para preparar el pedido.</p>
+          </div>
+        </ng-template>
+
+        <!-- Total y Acción -->
+        <div class="order-total-bar">
+          <div>
+            <small>Total a cobrar</small>
+            <strong>{{ totalPedido | currency:'PEN':'symbol':'1.2-2' }}</strong>
+          </div>
+          <button class="btn-create-order" type="button" [disabled]="guardando || !lineas.length || !cliente.trim()" (click)="crearPedido()">
+            {{ guardando ? 'Guardando pedido...' : 'Registrar Pedido' }} <span>→</span>
+          </button>
+        </div>
+      </article>
+
+      <!-- Panel de Mayor Rotación -->
+      <article class="panel rotation-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="overline">ANALÍTICA COMERCIAL</p>
+            <h3>Prendas de Mayor Rotación</h3>
+          </div>
+          <span class="badge-tag">Histórico</span>
+        </div>
+        <p class="panel-desc">Unidades vendidas por modelo. Se actualiza en tiempo real con cada compra.</p>
+
+        <div class="rotation-list" *ngIf="rotacion.length; else noRotation">
+          <div class="rotation-item" *ngFor="let item of rotacion | slice:0:7; let i = index">
+            <div class="rank-box" [class.gold]="i === 0" [class.silver]="i === 1" [class.bronze]="i === 2">
+              #{{ i + 1 }}
+            </div>
+            <div class="rot-thumb" [style.background-image]="'url(' + imagenProducto(item) + ')'"></div>
+            <div class="rot-details">
+              <div class="rot-name-row">
+                <strong>{{ item.nombre }}</strong>
+                <span class="rot-units">{{ item.unidadesVendidas }} uds.</span>
+              </div>
+              <div class="rot-track">
+                <i [style.width.%]="porcentajeRotacion(item)"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noRotation>
+          <div class="empty-state">
+            <p>Aún no hay suficiente actividad para calcular la rotación.</p>
+          </div>
+        </ng-template>
+      </article>
+    </section>
+
+    <!-- Tabla Historial de Pedidos Recientes -->
+    <section class="panel orders-history-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="overline">SEGUIMIENTO EN ALMACÉN</p>
+          <h3>Historial de Pedidos Realizados</h3>
+        </div>
+        <span class="badge-tag">{{ pedidos.length }} registros</span>
+      </div>
+
+      <div class="table-wrap" *ngIf="pedidos.length; else noOrdersHistory">
+        <table class="pedidos-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>CLIENTE</th>
+              <th>DIRECCIÓN</th>
+              <th>ARTÍCULOS</th>
+              <th>TOTAL</th>
+              <th>FECHA</th>
+              <th>ESTADO</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let ped of pedidos">
+              <td class="col-id"><strong>#{{ ped.id }}</strong></td>
+              <td><strong>{{ ped.cliente }}</strong></td>
+              <td><small class="col-dir">{{ ped.direccionEnvio || 'Atención en Tienda' }}</small></td>
+              <td>
+                <span class="items-count-badge">{{ ped.items.length || 1 }} artículo(s)</span>
+              </td>
+              <td class="col-total"><strong>{{ ped.total | currency:'PEN':'symbol':'1.2-2' }}</strong></td>
+              <td><small class="col-date">{{ fecha(ped.fecha) }}</small></td>
+              <td>
+                <span class="status-pill" [ngClass]="ped.estado.toLowerCase() || 'preparando'">
+                  {{ ped.estado }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ng-template #noOrdersHistory>
+        <div class="empty-state">
+          <p>No hay pedidos registrados en la sesión actual.</p>
+        </div>
+      </ng-template>
+    </section>
   </main>
 </div>

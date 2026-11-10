@@ -1,11 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { finalize, timeout } from 'rxjs';
 import { Producto } from '../../models/producto';
 import { Pedido, RotacionProducto } from '../../models/pedido';
 import { PedidoService } from '../../services/pedido';
 import { ProductoService } from '../../services/producto';
+import { AuthService } from '../../services/auth';
 
 interface LineaPedido {
   productoId: number;
@@ -20,15 +22,19 @@ interface LineaPedido {
   templateUrl: './pedidos.html',
   styleUrl: './pedidos.scss',
 })
-export class Pedidos {
+export class Pedidos implements OnInit {
   private readonly pedidosService = inject(PedidoService);
   private readonly productosService = inject(ProductoService);
   private readonly router = inject(Router);
+  readonly auth = inject(AuthService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   productos: Producto[] = [];
   pedidos: Pedido[] = [];
   rotacion: RotacionProducto[] = [];
   cliente = '';
+  direccionEnvio = 'Atención en Tienda';
+  metodoPago = 'Efectivo';
   productoSeleccionadoId = 0;
   cantidad = 1;
   lineas: LineaPedido[] = [];
@@ -36,22 +42,42 @@ export class Pedidos {
   guardando = false;
   mensaje = '';
   error = '';
+  fechaActual = new Date();
 
-  constructor() {
+  ngOnInit(): void {
     this.cargar();
   }
 
   cargar(): void {
+    this.cargando = true;
+    this.cdr.detectChanges();
+
     this.productosService.listar().subscribe({
-      next: productos => this.productos = productos.filter(producto => producto.activo),
+      next: productos => {
+        this.productos = (productos || []).filter(producto => producto.activo !== false);
+        this.cdr.detectChanges();
+      },
       error: () => this.error = 'No se pudo cargar el catálogo.',
     });
+
     this.pedidosService.listar().subscribe({
-      next: pedidos => { this.pedidos = pedidos; this.cargando = false; },
-      error: () => { this.error = 'No se pudieron cargar los pedidos.'; this.cargando = false; },
+      next: pedidos => {
+        this.pedidos = pedidos || [];
+        this.cargando = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.error = 'No se pudieron cargar los pedidos.';
+        this.cargando = false;
+        this.cdr.detectChanges();
+      },
     });
+
     this.pedidosService.rotacion().subscribe({
-      next: rotacion => this.rotacion = rotacion,
+      next: rotacion => {
+        this.rotacion = rotacion || [];
+        this.cdr.detectChanges();
+      },
       error: () => this.error = 'No se pudo calcular la rotación.',
     });
   }
@@ -65,10 +91,12 @@ export class Pedidos {
     else this.lineas.push({ productoId, cantidad: this.cantidad });
     this.productoSeleccionadoId = 0;
     this.cantidad = 1;
+    this.cdr.detectChanges();
   }
 
   quitarLinea(productoId: number): void {
     this.lineas = this.lineas.filter(item => item.productoId !== productoId);
+    this.cdr.detectChanges();
   }
 
   nombreProducto(productoId: number): string {
@@ -92,38 +120,89 @@ export class Pedidos {
     return item.unidadesVendidas ? Math.max(8, item.unidadesVendidas / maximo * 100) : 3;
   }
 
+  imagenProducto(producto: any): string {
+    if (producto?.imagen && producto.imagen.trim().length > 5) {
+      return producto.imagen.trim();
+    }
+    const enCat = this.productos.find(p => p.id === (producto?.productoId || producto?.id));
+    if (enCat?.imagen && enCat.imagen.trim().length > 5) {
+      return enCat.imagen.trim();
+    }
+    return 'assets/images/products/polos/polo-basico-negro.jpg';
+  }
+
   crearPedido(): void {
     this.error = '';
     this.mensaje = '';
     if (!this.cliente.trim() || !this.lineas.length) {
-      this.error = 'Indica el cliente y agrega al menos un producto.';
+      this.error = 'Indica el nombre del cliente y añade al menos un producto a la orden.';
       return;
     }
     this.guardando = true;
-    const items = this.lineas.map(linea => ({
-      varianteId: linea.varianteId || linea.productoId,
-      cantidad: linea.cantidad,
-    }));
-    this.pedidosService.crear(this.cliente.trim(), items).subscribe({
+    this.cdr.detectChanges();
+
+    const items = this.lineas.map(linea => {
+      const prod = this.productos.find(p => p.id === linea.productoId);
+      return {
+        productoId: linea.productoId,
+        varianteId: linea.varianteId || linea.productoId,
+        nombre: prod ? prod.nombre : this.nombreProducto(linea.productoId),
+        cantidad: linea.cantidad,
+        precio: prod ? prod.precio : this.precioProducto(linea.productoId),
+      };
+    });
+
+    this.pedidosService.crear(
+      this.cliente.trim(),
+      items,
+      this.direccionEnvio.trim() || 'Atención en Tienda',
+      this.metodoPago
+    ).pipe(
+      timeout(10000),
+      finalize(() => {
+        this.guardando = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
       next: pedido => {
         this.pedidos = [pedido, ...this.pedidos];
         this.lineas = [];
         this.cliente = '';
-        this.guardando = false;
-        this.mensaje = `Pedido #${pedido.id} creado. Entrega estimada: ${this.fecha(pedido.entregaEstimada)}.`;
+        this.direccionEnvio = 'Atención en Tienda';
+        this.mensaje = `¡Pedido #${pedido.id} registrado con éxito! Entrega estimada: ${this.fecha(pedido.entregaEstimada)}.`;
         this.cargar();
+        this.cdr.detectChanges();
       },
       error: response => {
-        this.error = response.error?.error || 'No se pudo crear el pedido.';
-        this.guardando = false;
+        this.error = response.error?.error || 'No se pudo crear el pedido. Revisa los datos ingresados.';
+        this.cdr.detectChanges();
       },
     });
   }
 
-  fecha(valor: string): string {
-    return new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(valor));
+  fecha(valor?: string): string {
+    if (!valor) return 'Reciente';
+    try {
+      return new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(valor));
+    } catch {
+      return valor;
+    }
   }
 
-  irDashboard(): void { this.router.navigate(['/dashboard']); }
-  irProductos(): void { this.router.navigate(['/productos']); }
+  irDashboard(): void {
+    this.router.navigate(['/dashboard']);
+  }
+
+  irProductos(): void {
+    this.router.navigate(['/productos']);
+  }
+
+  irTienda(): void {
+    this.router.navigate(['/tienda']);
+  }
+
+  cerrarSesion(): void {
+    this.auth.cerrarSesion();
+    this.router.navigate(['/']);
+  }
 }
