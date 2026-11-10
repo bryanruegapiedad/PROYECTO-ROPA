@@ -68,8 +68,8 @@ export class Categoria implements OnInit {
   imagen(producto: Producto): string {
     if (!producto) return 'assets/images/products/polos/polo-basico-negro.jpg';
 
-    // 1. Si el producto ya tiene su imagen de catálogo (Unsplash HD / CDN), usarla directamente
-    if (producto.imagen && producto.imagen.trim().startsWith('http')) {
+    // 1. Si el producto ya tiene asignada una imagen válida en la base de datos, usarla
+    if (producto.imagen && producto.imagen.trim().length > 5) {
       return producto.imagen.trim();
     }
 
