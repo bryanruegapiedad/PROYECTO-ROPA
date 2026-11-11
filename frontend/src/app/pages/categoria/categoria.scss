@@ -89,39 +89,60 @@
 }
 
 .cart-button {
+  align-items: center;
   background: #202a27;
   border: 0;
   border-radius: 999px;
   color: #f2efe8;
   cursor: pointer;
+  display: inline-flex;
   font-size: 10px;
+  font-weight: 600;
+  height: 34px;
+  box-sizing: border-box;
+  justify-content: center;
   letter-spacing: 0.08em;
-  padding: 9px 15px;
+  padding: 0 16px;
   text-transform: uppercase;
+  vertical-align: middle;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .cart-button span {
-  background: #dfe9dc;
+  align-items: center;
+  background: #cddbc4;
   border-radius: 50%;
   color: #1d281f;
   display: inline-flex;
   font-size: 9px;
+  font-weight: 700;
   height: 18px;
   justify-content: center;
+  line-height: 1;
   margin-left: 8px;
+  text-align: center;
   width: 18px;
+  flex-shrink: 0;
 }
 
 .outline-button {
+  align-items: center;
   background: transparent;
   border: 1px solid rgba(32, 42, 39, 0.2);
   border-radius: 999px;
   color: #2d2a27;
   cursor: pointer;
+  display: inline-flex;
   font-size: 10px;
+  font-weight: 600;
+  height: 34px;
+  box-sizing: border-box;
+  justify-content: center;
   letter-spacing: 0.08em;
-  padding: 8px 16px;
+  padding: 0 16px;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .user-mark {
@@ -129,12 +150,13 @@
   background: #d8e0d5;
   border-radius: 50%;
   color: #1d261f;
-  display: flex;
+  display: inline-flex;
   font-size: 10px;
   font-weight: 700;
-  height: 30px;
+  height: 34px;
   justify-content: center;
-  width: 30px;
+  width: 34px;
+  flex-shrink: 0;
 }
 
 .admin-nav-pill {
@@ -165,11 +187,15 @@
   border-radius: 999px;
   font-size: 10px;
   font-weight: 700;
+  height: 34px;
+  box-sizing: border-box;
+  justify-content: center;
   letter-spacing: 0.08em;
-  padding: 7px 14px;
+  padding: 0 14px;
   text-decoration: none;
   text-transform: uppercase;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  white-space: nowrap;
   transition: all 0.2s ease;
 
   &:hover {
@@ -419,6 +445,8 @@
   border: 1px solid rgba(34, 32, 29, 0.06);
   border-radius: 24px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 16px 30px rgba(28, 20, 16, 0.05);
 }
@@ -456,14 +484,18 @@
 }
 
 .save-button {
+  align-items: center;
   background: rgba(255, 255, 255, 0.76);
   backdrop-filter: blur(8px);
   border: 0;
   border-radius: 50%;
   color: #2f312d;
   cursor: pointer;
+  display: inline-flex;
   font-size: 18px;
   height: 36px;
+  justify-content: center;
+  line-height: 1;
   position: absolute;
   right: 14px;
   top: 12px;
@@ -473,6 +505,7 @@
 .pin-meta {
   align-items: flex-start;
   display: flex;
+  flex: 1;
   gap: 12px;
   justify-content: space-between;
   padding: 18px 18px 0;
@@ -510,17 +543,27 @@
   display: grid;
   gap: 10px;
   grid-template-columns: 1fr 1fr;
-  margin: 16px 18px 18px;
+  margin: auto 18px 18px;
 }
 
 .ghost,
 .add-cart {
+  align-items: center;
   border: 0;
+  border-radius: 999px;
   cursor: pointer;
+  display: inline-flex;
   font-size: 10px;
+  font-weight: 600;
+  height: 38px;
+  box-sizing: border-box;
+  justify-content: center;
   letter-spacing: 0.08em;
-  padding: 12px 14px;
+  padding: 0 14px;
+  text-align: center;
+  text-decoration: none;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .ghost {
